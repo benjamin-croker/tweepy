@@ -1,0 +1,17 @@
+*
+
+!.gitignore
+!data/
+!lib/
+!lib/*
+!reports/
+!nltk_data/
+!nltk_data/corpora
+!nltk_data/corpora/movie_reviews
+!nltk_data/corpora/movie_reviews/neg/*
+!nltk_data/corpora/movie_reviews/pos/*
+!nltk_data/corpora/movie_reviews/README
+!nltk_data/*/*
+!nltk_data/*/*/*
+!tweepy.py
+!requirements.txt
