@@ -8,7 +8,7 @@ It can also calculate tweet sentiment and perform word frequency analysis.
 The python packages required are
 ```
 nltk
-oath2
+oauth2
 ```
 
 Many thanks to the kind people at Cornell who produced the [movie review dataset]
