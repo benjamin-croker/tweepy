@@ -35,14 +35,6 @@ def setup_parser():
             help="do not include retweets in the search", action="store_true")
     trends_parser.set_defaults(which="search-trends")
 
-    # set up arguments for the stream-trends command
-    stream_parser = subparsers.add_parser("stream-trends",
-            help="Stream trending terms for the given WOEID")
-    stream_parser.add_argument("WOEID")
-    stream_parser.add_argument("-d", "--database",
-            help="Specify DB filename in the 'data' directory")
-    stream_parser.set_defaults(which="stream-trends")
-
     # set up arguments for the calc-sentiment command
     calc_parser = subparsers.add_parser("calc-sentiment",
             help="Calculates the sentiment for all tweets in the database")
