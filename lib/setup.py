@@ -1,5 +1,3 @@
-""" sets up the auth.py file
-"""
 import argparse
 import logging
 import os
