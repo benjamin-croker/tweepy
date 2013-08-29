@@ -13,7 +13,7 @@ The Python packages required by twerpy are
 nltk
 oauth2
 ```
-You also need to have a twitter account and (register an app)[https://dev.twitter.com/apps/new] to get an Twitter API key.
+You also need to have a twitter account and [register an app](https://dev.twitter.com/apps/new) to get an Twitter API key.
 This is used for authenticating API requests, and is stored in plaintext on your machine, so only use twerpy on
 secure machines.
 
@@ -63,8 +63,8 @@ $ python twerpy.py search-terms terms.txt --database good_bad.db --no_RT
 The option `--no_RT` will exclude retweets from the search.
 
 ### Searching trending tweets
-You can search for trending tweets in a specified location, using the (WOEID)[http://en.wikipedia.org/wiki/WOEID].
-You can (look up WOEIDs here)[http://woeid.rosselliot.co.nz/].
+You can search for trending tweets in a specified location, using the [WOEID](http://en.wikipedia.org/wiki/WOEID).
+You can [look up WOEIDs here](http://woeid.rosselliot.co.nz/).
 
 This will find all the trending terms for the WOEID, then run a search on each of them.
 The search group will be automatically populated as `<WOEID>_<trending_term>`
