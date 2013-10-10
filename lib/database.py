@@ -7,15 +7,23 @@ import sqlite3
 import sys
 import logging
 
-_create_table_sql = """
+_create_tables_sql = ["""
 CREATE TABLE tweet (
     id_str TEXT,
+    user_id TEXT,
     tweet_text TEXT,
     created_at TEXT,
     search_group TEXT,
     sentiment TEXT
 );
+""",
 """
+CREATE TABLE graph (
+    central_user TEXT,
+    user_id TEXT,
+    user_follows_id TEXT
+);
+"""]
 
 _insert_sql = """
 INSERT INTO tweet VALUES (?,?,?,?,?);
@@ -43,13 +51,21 @@ def get_header():
     return ["id_str", "tweet_text", "created_at", "search_group", "sentiment"]
 
 
-def reset(db_filename):
-    """ creates a new sqlite database with the given file name.
-        any existing database will be overwritten
+def _warning_prompt(db_filename):
+    """ displays a warning to the user since the database will be deleted
     """
     print("WARNING: This will delete your the database: {0}".format(db_filename))
-    warnInput = raw_input("Type 'yes' to proceed, or anything else to quit: ")
-    if warnInput != "yes":
+    return raw_input("Type 'yes' to proceed, or anything else to quit: ")
+
+
+def reset(db_filename, warning_input=_warning_prompt):
+    """ creates a new sqlite database with the given file name.
+        any existing database will be overwritten
+
+        warning_input is a function which takes a database name and returns
+        "yes" if the user wants to delete the database
+    """
+    if warning_input(db_filename) != "yes":
         print("quitting")
         sys.exit()
 
@@ -62,7 +78,8 @@ def reset(db_filename):
 
     # create the database tables
     con = open_db_connection(db_filename)
-    con.execute(_create_table_sql)
+    for _create_table_sql in _create_tables_sql:
+        con.execute(_create_table_sql)
     con.commit()
     con.close()
 
@@ -80,14 +97,14 @@ def close_db_connection(con):
     con.close()
 
 
-def insert_tweet(con, id_str, tweet_text, created_at, group, sentiment=""):
+def insert_tweet(con, id_str, user_id, tweet_text, created_at, group, sentiment=""):
     """ attempts to insert the values (passed as a tuple) into the database
         via the connection con.
         True is returned if the entry was created. False is returned if the
         tweet already exists,
     """
     try:
-        con.execute(_insert_sql, (id_str, tweet_text, created_at, group, sentiment))
+        con.execute(_insert_sql, (id_str, user_id, tweet_text, created_at, group, sentiment))
         con.commit()
         return True
     except sqlite3.IntegrityError:

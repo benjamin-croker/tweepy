@@ -83,7 +83,7 @@ def search_all_terms(filename, con, no_RT=False):
         for line in f.readlines():
             # split the line into a query and group
             # check the line to see if it's formatted correctly
-            if len(line.split(":") != 2:
+            if len(line.split(":")) != 2:
                 raise Exception("Error in search term \n {0} \n Line must be formatted as <term>:<group>")
             [term, group] = line.split(":")
             if group.endswith("\n"):
