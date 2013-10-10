@@ -14,7 +14,8 @@ CREATE TABLE tweet (
     tweet_text TEXT,
     created_at TEXT,
     search_group TEXT,
-    sentiment TEXT
+    sentiment TEXT,
+    PRIMARY KEY (id_str, search_group)
 );
 """,
 """
@@ -26,7 +27,7 @@ CREATE TABLE graph (
 """]
 
 _insert_sql = """
-INSERT INTO tweet VALUES (?,?,?,?,?);
+INSERT INTO tweet VALUES (?,?,?,?,?,?);
 """
 
 _update_sentiment_sql = """
@@ -48,7 +49,7 @@ SELECT search_group FROM tweet GROUP BY search_group;
 def get_header():
     """ returns a list of the headers in the DB table
     """
-    return ["id_str", "tweet_text", "created_at", "search_group", "sentiment"]
+    return ["id_str", "user_id", "tweet_text", "created_at", "search_group", "sentiment"]
 
 
 def _warning_prompt(db_filename):
@@ -139,7 +140,7 @@ def update_sentiments(con, sentFunc, update_all=True):
     con.commit()
 
 
-def tweets(con):
+def get_tweets(con):
     """ returns a dict of all the tweets
     """
     cursor = con.execute(_get_all_tweets_sql)

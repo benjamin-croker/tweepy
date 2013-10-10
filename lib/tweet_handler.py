@@ -112,7 +112,7 @@ def dump_tweets(con, format="csv"):
     """ writes the tweets to the reports folder.
         format must be one of csv or json
     """
-    tweets, header = db.tweets(con)
+    tweets, header = db.get_tweets(con)
     if format == "json":
         with open(os.path.join("reports", "tweets.json"), "wb") as f:
             f.write(json.dumps(tweets))
@@ -132,7 +132,7 @@ def dump_word_frequencies(con, format="csv"):
     """ writes the word frequencies to the "reports" folder.
         Format must be one of csv or json
     """
-    tweets, _ = db.tweets(con)
+    tweets, _ = db.get_tweets(con)
     word_freqs = analysis.word_frequency(tweets)
 
     if format == "json":
@@ -161,7 +161,7 @@ def dump_sentiment_frequencies(con, format="csv"):
     """ writes the sentiment frequencies to the "reports" folder.
         Format must be one of csv or json
     """
-    tweets, _ = db.tweets(con)
+    tweets, _ = db.get_tweets(con)
     sent_freqs = analysis.sentiment_frequency(tweets)
 
     if format == "json":
