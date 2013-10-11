@@ -37,6 +37,7 @@ def reset(db_filename, warning_input=_warning_prompt):
     db_dict = open_db_connection(db_filename)
     db_dict["tweets"] = []
     db_dict["users"] = []
+    db_dict["graphs"] = []
     close_db_connection(db_dict)
 
 
@@ -55,13 +56,15 @@ def close_db_connection(db_dict):
 
 def insert_tweet(db_dict, tweet, tweet_group, sentiment=""):
     """ Inserts the tweet data (as a json object) into the database, appending "search_group"
-        and "sentiment" fields
+        and "sentiment" fields. Returns True if the insertion was successful
     """
     # add the tweet group and sentiment
     tweet["tweet_group"] = tweet_group
     tweet["sentiment"] = sentiment
-
     db_dict["tweets"].append(tweet)
+    # this will always return True. The interface was designed so that failure conditions
+    # (which would return false) could be added in later
+    return True
 
 
 def update_sentiments(db_dict, sent_func, update_all=True):
@@ -92,7 +95,7 @@ def get_users(db_dict):
     return db_dict["users"]
 
 
-def tweet_groups(db_dict):
+def get_tweet_groups(db_dict):
     """ returns a list of all the tweet groups
     """
     return list(set([tweet["tweet_group"] for tweet in db_dict["tweets"]]))
