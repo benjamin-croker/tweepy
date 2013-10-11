@@ -53,10 +53,13 @@ boring:bad_times
 You don't just have to search for hashtags, you can search for words as well.
 
 To run a search
-```
+
 usage:
+```
 python twerpy.py search-terms terms_filename [-d | --database dbfilename][--no_RT]
+```
 examples:
+```
 $ python twerpy.py search-terms terms.txt
 $ python twerpy.py search-terms terms.txt --database good_bad.db --no_RT
 ```
@@ -70,28 +73,37 @@ This will find all the trending terms for the WOEID, then run a search on each o
 The search group will be automatically populated as `<WOEID>_<trending_term>`
 
 To run a search for trending terms in San Francisco for example
-```
+
 usage:
+```
 python twerpy.py search-trends 2487956 [-d | --database dbfilename][--no_RT]
+```
 example:
+```
 $ python twerpy.py search-trends 2487956 -d san_fran.db --no_RT
 ```
 
 ### Analysing tweets
 To calculate the sentiment (pos, neg or neutral) of all tweets in the database
-```
+
 usage:
+```
 python twerpy.py calc-sentiment [-d | --database dbfilename]
+```
 example:
+```
 $ python twerpy.py calc-sentiment -d good_bad.db
 ```
 
 twerpy can perform word frequency analysis and sentiment analysis, with summary
 statistics broken down by search group.
-```
+
 usage:
+```
 python twerpy.py report [-d | --database dbfilename]
+```
 example:
+```
 $ python twerpy.py report -d good_bad.db
 ```
 This will place reports in CSV and JSON format in the `reports` directory.
