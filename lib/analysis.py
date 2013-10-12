@@ -12,16 +12,16 @@ def word_frequency(tweets, min_length=4):
     tokenizer = RegexpTokenizer(r'\w+')
 
     # get a list of the search groups. Format the labels as {search_group}_group
-    search_groups = list(set(["{0}_group".format(t["search_group"]) for t in tweets]))
+    search_groups = list(set(["{0}_group".format(t["tweet_group"]) for t in tweets]))
 
     # make a dictionary with a frequency distribution object for each group
     group_fds = dict([(group, nltk.FreqDist()) for group in ["total"] + search_groups])
 
     for tweet in tweets:
-        for word in tokenizer.tokenize(tweet["tweet_text"].lower()):
+        for word in tokenizer.tokenize(tweet["text"].lower()):
             if len(word) >= min_length:
                 group_fds["total"].inc(word)
-                group_fds["{0}_group".format(tweet["search_group"])].inc(word)
+                group_fds["{0}_group".format(tweet["tweet_group"])].inc(word)
 
     # get a list of all the words, in decreasing frequency order
     words = group_fds["total"].keys()
@@ -98,14 +98,14 @@ def classify_sentiment(classifier, text, neutral_threshold = 0.3):
 def sentiment_frequency(tweets):
 
     # get a list of the search groups. Format the labels as {search_group}_group
-    search_groups = list(set(["{0}_group".format(t["search_group"]) for t in tweets]))
+    search_groups = list(set(["{0}_group".format(t["tweet_group"]) for t in tweets]))
 
     # make a dictionary with a frequency distribution object for each group
     group_fds = dict([(group, nltk.FreqDist()) for group in ["total"] + search_groups])
 
     for tweet in tweets:
         group_fds["total"].inc(tweet["sentiment"])
-        group_fds["{0}_group".format(tweet["search_group"])].inc(tweet["sentiment"])
+        group_fds["{0}_group".format(tweet["tweet_group"])].inc(tweet["sentiment"])
 
     sent_freqs = []
     # make sure the total frequency count comes first

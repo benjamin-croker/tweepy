@@ -18,6 +18,8 @@ oauth_consumer = oauth.Consumer(key=auth.consumer_key, secret=auth.consumer_secr
 def ctrl_c_handler(signum, frame):
     print("Exiting")
     exit(0)
+
+
 signal.signal(signal.SIGINT, ctrl_c_handler)
 
 
@@ -113,7 +115,8 @@ def dump_tweets(con, format="csv"):
     """ writes the tweets to the reports folder.
         format must be one of csv or json
     """
-    tweets, header = db.get_tweets(con)
+    header = ["id_str", "text", "created_at", "tweet_group", "sentiment"]
+    tweets = db.get_tweets(con)
     if format == "json":
         with open(os.path.join("reports", "tweets.json"), "wb") as f:
             f.write(json.dumps(tweets))
@@ -145,13 +148,13 @@ def dump_word_frequencies(db_dict, report_format="csv"):
             writer = csv.writer(f, delimiter=",")
 
             writer.writerow(["word"] + ["{0}_frequency".format(f["label"])
-                    for f in word_freqs])
+                                        for f in word_freqs])
 
             for i in range(len(word_freqs[0]["data"])):
                 row = [word_freqs[0]["data"][i][0]]
                 row += [group["data"][i][1] for group in word_freqs]
 
-                if type(row[0])==unicode:
+                if type(row[0]) == unicode:
                     row[0] = row[0].encode("utf-8")
                 writer.writerow(row)
     else:
@@ -162,7 +165,7 @@ def dump_sentiment_frequencies(con, format="csv"):
     """ writes the sentiment frequencies to the "reports" folder.
         Format must be one of csv or json
     """
-    tweets, _ = db.get_tweets(con)
+    tweets = db.get_tweets(con)
     sent_freqs = analysis.sentiment_frequency(tweets)
 
     if format == "json":
@@ -174,13 +177,13 @@ def dump_sentiment_frequencies(con, format="csv"):
             writer = csv.writer(f, delimiter=",")
 
             writer.writerow(["sentiment"] + ["{0}_frequency".format(f["label"])
-                    for f in sent_freqs])
+                                             for f in sent_freqs])
 
             for i in range(len(sent_freqs[0]["data"])):
                 row = [sent_freqs[0]["data"][i][0]]
                 row += [group["data"][i][1] for group in sent_freqs]
 
-                if type(row[0])==unicode:
+                if type(row[0]) == unicode:
                     row[0] = row[0].encode("utf-8")
                 writer.writerow(row)
     else:
