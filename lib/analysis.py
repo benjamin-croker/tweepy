@@ -6,6 +6,7 @@ from nltk.classify import NaiveBayesClassifier
 import os
 import logging
 
+
 def word_frequency(tweets, min_length=4):
     # use a regular expression tokeniser
     tokenizer = RegexpTokenizer(r'\w+')

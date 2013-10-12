@@ -1,4 +1,3 @@
-import argparse
 import logging
 import os
 import sys
@@ -13,8 +12,8 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s',
 
 # if we're doing a setup, run that then quit
 if args.which == "setup" and args.database is None:
-     setup.setup_all()
-     sys.exit(0)
+    setup.setup_all()
+    sys.exit(0)
 
 # if we're not running a basic setup, we need to import other files
 from data import auth

@@ -1,5 +1,4 @@
 import unittest
-import json
 from lib import database as db
 
 
