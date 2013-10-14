@@ -49,21 +49,23 @@ def twitterreq(url, http_method="GET", parameters=[]):
     return response
 
 
-def search_term(query, tweet_group, db_dict, no_RT=False, search_count=50):
-    """ searches for a single term and stores the results in the database
+def search_tweets(term, tweet_group, db_dict, no_RT=False, search_count=50):
+    """ searches for tweets containing the given term and stores them in the database
 
         returns the list of tweets
     """
+    query_params = "{0}&count={1}".format(term, search_count)
     if no_RT:
-        query += urllib.quote(" exclude:retweets")
-    query += "&count={0}".format(search_count)
+        query_params += urllib.quote(" exclude:retweets")
 
-    logging.info("Searching for {0}".format(query))
+    logging.info("Searching for {0}".format(query_params))
+
     # encode the query for use in a url
-    url = "https://api.twitter.com/1.1/search/tweets.json?q={0}".format(query)
-    print url
-    json_data = json.load(twitterreq(url, "GET"))
-    logging.info("Searching for {0} completed".format(query))
+    query_url = "https://api.twitter.com/1.1/search/tweets.json?q={0}".format(query_params)
+
+    logging.info("Twitter API call: {0}".format(query_url))
+    json_data = json.load(twitterreq(query_url, "GET"))
+    logging.info("Searching for {0} completed".format(term))
 
     if not "statuses" in json_data:
         logging.error("Error {0}".format(json_data))
@@ -73,11 +75,11 @@ def search_term(query, tweet_group, db_dict, no_RT=False, search_count=50):
     for tweet in tweets:
         db.insert_tweet(db_dict, tweet, tweet_group)
 
-    logging.info("Results written")
+    logging.info("Results written to database")
     return tweets
 
 
-def search_all_terms(filename, db_dict, no_RT=False):
+def search_multiple_terms(filename, db_dict, no_RT=False):
     """ opens a file, which contains one search term per line,
         and runs a search for each term
     """
@@ -92,42 +94,65 @@ def search_all_terms(filename, db_dict, no_RT=False):
                 group = group[:-1]
 
             query = urllib.quote(term)
-            search_term(query, group, db_dict, no_RT)
+            search_tweets(query, group, db_dict, no_RT)
 
 
-def search_all_trends(WOEID, db_dict, no_RT=False):
+def search_trends(WOEID, db_dict):
     """ finds all the hashtags for the given WOEID then runs a search on
         each of them
     """
     logging.info("Getting trends for WOEID {0}".format(WOEID))
-    # encode the query for use in a url
-    url = "https://api.twitter.com/1.1/trends/place.json?id={0}".format(WOEID)
-    # the data returned is in a single-element list for some reason
-    json_data = json.load(twitterreq(url, "GET"))
 
+    # encode the query for use in a url
+    query_url = "https://api.twitter.com/1.1/trends/place.json?id={0}".format(WOEID)
+
+    json_data = json.load(twitterreq(query_url, "GET"))
+
+    # For each trend, output a line in the format <search_query>:<WOEID>_<trend name>
     # the data returned is in a single-element list for some reason
     for trend in json_data[0]["trends"]:
         if "query" in trend and trend["query"]:
-            search_term(trend["query"], "{0}_{1}".format(WOEID, trend["name"]), db_dict, no_RT)
+            print("{0}:{1}_{2}".format(trend["query"], WOEID, trend["name"]))
 
 
-def dump_tweets(con, format="csv"):
+def dump_tweets(db_dict, report_format="csv"):
     """ writes the tweets to the reports folder.
         format must be one of csv or json
     """
     header = ["id_str", "text", "created_at", "tweet_group", "sentiment"]
-    tweets = db.get_tweets(con)
-    if format == "json":
+    tweets = db.get_tweets(db_dict)
+    if report_format == "json":
         with open(os.path.join("reports", "tweets.json"), "wb") as f:
             f.write(json.dumps(tweets))
 
-    elif format == "csv":
+    elif report_format == "csv":
         with open(os.path.join("reports", "tweets.csv"), "wb") as f:
             writer = csv.writer(f, delimiter=",")
 
             writer.writerow(header)
             for tweet in tweets:
                 writer.writerow([tweet[k].encode("utf-8") for k in header])
+    else:
+        raise Exception("Format must be csv or json")
+
+
+def dump_users(db_dict, report_format="csv"):
+    """ writes the tweets to the reports folder.
+        format must be one of csv or json
+    """
+    header = ["id_str", "screen_name", "user_group"]
+    users = db.get_users(db_dict)
+    if report_format == "json":
+        with open(os.path.join("reports", "users.json"), "wb") as f:
+            f.write(json.dumps(users))
+
+    elif report_format == "csv":
+        with open(os.path.join("reports", "users.csv"), "wb") as f:
+            writer = csv.writer(f, delimiter=",")
+
+            writer.writerow(header)
+            for user in users:
+                writer.writerow([user[k].encode("utf-8") for k in header])
     else:
         raise Exception("Format must be csv or json")
 
@@ -161,18 +186,18 @@ def dump_word_frequencies(db_dict, report_format="csv"):
         raise Exception("Format must be csv or json")
 
 
-def dump_sentiment_frequencies(con, format="csv"):
+def dump_sentiment_frequencies(con, report_format="csv"):
     """ writes the sentiment frequencies to the "reports" folder.
         Format must be one of csv or json
     """
     tweets = db.get_tweets(con)
     sent_freqs = analysis.sentiment_frequency(tweets)
 
-    if format == "json":
+    if report_format == "json":
         with open(os.path.join("reports", "sent_freq.json"), "wb") as f:
             f.write(json.dumps(sent_freqs))
 
-    elif format == "csv":
+    elif report_format == "csv":
         with open(os.path.join("reports", "sent_freq.csv"), "wb") as f:
             writer = csv.writer(f, delimiter=",")
 

@@ -26,35 +26,36 @@ if args.database:
     db_filename = os.path.join(data_dir_path, args.database)
 else:
     db_filename = os.path.join(data_dir_path, auth.default_db_filename)
-con = db.open_db_connection(db_filename)
+
+db_dict = db.open_db_connection(db_filename)
 
 if args.which == "setup":
     # there should be an args.database argument if execution reaches here
     setup.setup_db(db_filename)
 
 elif args.which == "search-terms":
-    tweet_handler.search_all_terms(args.filename, con, args.no_RT)
+    tweet_handler.search_multiple_terms(args.filename, db_dict, args.no_RT)
 
 elif args.which == "search-trends":
-    tweet_handler.search_all_trends(args.WOEID, con, args.no_RT)
+    tweet_handler.search_trends(args.WOEID, db_dict)
 
 elif args.which == "calc-sentiment":
     cl_filename = os.path.join(data_dir_path, auth.default_cl_filename)
     classifier = analysis.load_sentiment(cl_filename)
     
-    db.update_sentiments(con, lambda text: analysis.classify_sentiment(classifier, text))
+    db.update_sentiments(db_dict, lambda text: analysis.classify_sentiment(classifier, text))
 
 elif args.which == "report":
-    tweet_handler.dump_tweets(con)
-    tweet_handler.dump_tweets(con, "json")
+    tweet_handler.dump_tweets(db_dict)
+    tweet_handler.dump_tweets(db_dict, "json")
 
-    tweet_handler.dump_word_frequencies(con)
-    tweet_handler.dump_word_frequencies(con, "json")
+    tweet_handler.dump_word_frequencies(db_dict)
+    tweet_handler.dump_word_frequencies(db_dict, "json")
 
-    tweet_handler.dump_sentiment_frequencies(con)
-    tweet_handler.dump_sentiment_frequencies(con, "json")
+    tweet_handler.dump_sentiment_frequencies(db_dict)
+    tweet_handler.dump_sentiment_frequencies(db_dict, "json")
     
-db.close_db_connection(con)
+db.close_db_connection(db_dict)
 
 
 

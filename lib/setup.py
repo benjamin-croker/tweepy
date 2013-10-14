@@ -31,8 +31,6 @@ def setup_parser():
     trends_parser.add_argument("WOEID")
     trends_parser.add_argument("-d", "--database",
             help="Specify DB filename in the 'data' directory")
-    trends_parser.add_argument("--no_RT",
-            help="do not include retweets in the search", action="store_true")
     trends_parser.set_defaults(which="search-trends")
 
     # set up arguments for the calc-sentiment command
