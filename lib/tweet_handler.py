@@ -52,13 +52,13 @@ def twitterreq(url, http_method="GET", parameters=[]):
 def search_tweets(term, tweet_group, db_dict, no_RT=False, search_count=50):
     """ searches for tweets containing the given term and stores them in the database
 
-        returns the list of tweets
+        returns the list of tweet objects
     """
     query_params = "{0}&count={1}".format(term, search_count)
     if no_RT:
         query_params += urllib.quote(" exclude:retweets")
 
-    logging.info("Searching for {0}".format(query_params))
+    logging.info("Searching tweets about {0}".format(query_params))
 
     # encode the query for use in a url
     query_url = "https://api.twitter.com/1.1/search/tweets.json?q={0}".format(query_params)
@@ -74,6 +74,40 @@ def search_tweets(term, tweet_group, db_dict, no_RT=False, search_count=50):
     tweets = json_data["statuses"]
     for tweet in tweets:
         db.insert_tweet(db_dict, tweet, tweet_group)
+
+    logging.info("Results written to database")
+    return tweets
+
+
+def search_users(term, user_group, db_dict, search_count=50):
+    """ searches for users who have recently posted tweets with containing the term and
+        stores them in the database
+
+        returns the list of user objects
+    """
+    query_params = "{0}&count={1}".format(term, search_count)
+    # don't include retweets when searching for users
+    query_params += urllib.quote(" exclude:retweets")
+
+    logging.info("Searching for users who tweeted about {0}".format(query_params))
+
+    # encode the query for use in a url
+    query_url = "https://api.twitter.com/1.1/search/tweets.json?q={0}".format(query_params)
+
+    logging.info("Twitter API call: {0}".format(query_url))
+    json_data = json.load(twitterreq(query_url, "GET"))
+    logging.info("Searching for {0} completed".format(term))
+
+    if not "statuses" in json_data:
+        logging.error("Error {0}".format(json_data))
+
+    # save the results
+    tweets = json_data["statuses"]
+    # extract the user object from the tweet object
+    users = [tweet["user"] for tweet in tweets]
+
+    for user in users:
+        db.insert_user(db_dict, user, user_group)
 
     logging.info("Results written to database")
     return tweets

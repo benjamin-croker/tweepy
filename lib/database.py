@@ -55,13 +55,25 @@ def close_db_connection(db_dict):
 
 
 def insert_tweet(db_dict, tweet, tweet_group, sentiment=""):
-    """ Inserts the tweet data (as a json object) into the database, appending "search_group"
-        and "sentiment" fields. Returns True if the insertion was successful
+    """ Inserts the tweet data (as a json object) into the database, adding "tweet_group"
+        and "sentiment" key/value pairs. Returns True if the insertion was successful
     """
     # add the tweet group and sentiment
     tweet["tweet_group"] = tweet_group
     tweet["sentiment"] = sentiment
     db_dict["tweets"].append(tweet)
+    # this will always return True. The interface was designed so that failure conditions
+    # (which would return false) could be added in later
+    return True
+
+
+def insert_user(db_dict, user, user_group):
+    """ inserts the user data (as a json object) into the database, adding "user_group"
+        key/value pair. Returns True if the insertion was successful
+    """
+    # add the user group
+    user["user_group"] = user_group
+    db_dict["users"].append(user)
     # this will always return True. The interface was designed so that failure conditions
     # (which would return false) could be added in later
     return True
