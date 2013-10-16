@@ -87,7 +87,7 @@ def update_sentiments(db_dict, sent_func, update_all=True):
         otherwise only tweets with blank sentiment strings are calculated
     """
     for tweet in db_dict["tweets"]:
-        if update_all or len(tweet["text"])==0:
+        if update_all or len(tweet["text"]) == 0:
             tweet["sentiment"] = sent_func(tweet["text"])
 
     # write changes to disc. This operation may not be needed, but calculating sentiment
