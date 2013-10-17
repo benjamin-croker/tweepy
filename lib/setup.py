@@ -5,6 +5,7 @@ import os
 import analysis
 import database as db
 
+
 def setup_parser():
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers()
@@ -15,15 +16,31 @@ def setup_parser():
     setup_parser.add_argument("-d", "--database", help="Set up database only. Specify DB filename in data directory")
     setup_parser.set_defaults(which="setup")
 
-    # set up arguments for the search-terms command
-    term_parser = subparsers.add_parser("search-terms",
-            help="Search for terms in the given file")
+    # set up arguments for the search-tweets command
+    term_parser = subparsers.add_parser("search-tweets",
+            help="Search for tweets about specific topics")
     term_parser.add_argument("filename")
     term_parser.add_argument("-d", "--database",
             help="Specify DB filename in the 'data' directory")
     term_parser.add_argument("--no_RT",
             help="do not include retweets in the search", action="store_true")
-    term_parser.set_defaults(which="search-terms")
+    term_parser.set_defaults(which="search-tweets")
+
+    # set up arguments for the search-users command
+    user_parser = subparsers.add_parser("search-users",
+            help="Search users who recently tweeted about specific topics")
+    user_parser.add_argument("filename")
+    user_parser.add_argument("-d", "--database",
+            help="Specify DB filename in the 'data' directory")
+    user_parser.set_defaults(which="search-users")
+
+    # set up arguments for the search-top-users command
+    user_parser = subparsers.add_parser("search-top-users",
+            help="Search for the top users on specific topics")
+    user_parser.add_argument("filename")
+    user_parser.add_argument("-d", "--database",
+            help="Specify DB filename in the 'data' directory")
+    user_parser.set_defaults(which="search-top-users")
 
     # set up arguments for the search-trends command
     trends_parser = subparsers.add_parser("search-trends",
@@ -47,7 +64,24 @@ def setup_parser():
             help="Writes CSV (default) or JSON reports to the 'reports' directory")
     report_parser.add_argument("-d", "--database",
             help="Specify DB filename in 'data' directory")
+    report_parser.add_argument("--json", help="Report data in JSON format")
     report_parser.set_defaults(which="report")
+
+    # set up arguments for the dump-tweets command
+    dump_tweets_parser = subparsers.add_parser("dump-tweets",
+            help="Dumps all the data to tweets.csv in the 'reports' directory")
+    dump_tweets_parser.add_argument("-d", "--database",
+            help="Specify DB filename in 'data' directory")
+    dump_tweets_parser.add_argument("--json", help="Report data in JSON format")
+    dump_tweets_parser.set_defaults(which="dump-tweets")
+
+    # set up arguments for the dump-users command
+    dump_users_parser = subparsers.add_parser("dump-users",
+            help="Dumps all the data to users.csv in the 'reports' directory")
+    dump_users_parser.add_argument("-d", "--database",
+            help="Specify DB filename in 'data' directory")
+    dump_users_parser.add_argument("--json", help="Report data in JSON format")
+    dump_users_parser.set_defaults(which="dump-users")
 
     return parser
 

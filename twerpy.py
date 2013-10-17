@@ -22,40 +22,64 @@ from lib import analysis, tweet_handler
 
 # find the absolute path of the database file
 data_dir_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
+
 if args.database:
     db_filename = os.path.join(data_dir_path, args.database)
 else:
     db_filename = os.path.join(data_dir_path, auth.default_db_filename)
 
-db_dict = db.open_db_connection(db_filename)
 
 if args.which == "setup":
-    # there should be an args.database argument if execution reaches here
     setup.setup_db(db_filename)
 
-elif args.which == "search-terms":
+elif args.which == "search-tweets":
+    db_dict = db.open_db_connection(db_filename)
     tweet_handler.search_multiple_terms(args.filename, db_dict, args.no_RT)
+    db.close_db_connection(db_dict)
 
 elif args.which == "search-trends":
+    db_dict = db.open_db_connection(db_filename)
     tweet_handler.search_trends(args.WOEID, db_dict)
+    db.close_db_connection(db_dict)
 
 elif args.which == "calc-sentiment":
+    db_dict = db.open_db_connection(db_filename)
     cl_filename = os.path.join(data_dir_path, auth.default_cl_filename)
     classifier = analysis.load_sentiment(cl_filename)
-    
+
     db.update_sentiments(db_dict, lambda text: analysis.classify_sentiment(classifier, text))
+    db.close_db_connection(db_dict)
+
+elif args.which == "dump-tweets":
+    if args.json:
+        report_format = "json"
+    else:
+        report_format = "csv"
+
+    db_dict = db.open_db_connection(db_filename)
+    tweet_handler.dump_tweets(db_dict, report_format)
+    db.close_db_connection(db_dict)
+
+elif args.which == "dump-users":
+    if args.json:
+        report_format = "json"
+    else:
+        report_format = "csv"
+
+    db_dict = db.open_db_connection(db_filename)
+    tweet_handler.dump_users(db_dict, report_format)
+    db.close_db_connection(db_dict)
 
 elif args.which == "report":
-    tweet_handler.dump_tweets(db_dict)
-    tweet_handler.dump_tweets(db_dict, "json")
+    if args.json:
+        report_format = "json"
+    else:
+        report_format = "csv"
 
-    tweet_handler.dump_word_frequencies(db_dict)
-    tweet_handler.dump_word_frequencies(db_dict, "json")
-
-    tweet_handler.dump_sentiment_frequencies(db_dict)
-    tweet_handler.dump_sentiment_frequencies(db_dict, "json")
-    
-db.close_db_connection(db_dict)
+    db_dict = db.open_db_connection(db_filename)
+    tweet_handler.dump_word_frequencies(db_dict, report_format)
+    tweet_handler.dump_sentiment_frequencies(db_dict, report_format)
+    db.close_db_connection(db_dict)
 
 
 

@@ -44,6 +44,10 @@ def reset(db_filename, warning_input=_warning_prompt):
 def open_db_connection(db_filename):
     """ remember to close this at the end
     """
+    # check the extension, as shelve will add the .db extension
+    # TODO: check this in windows
+    if db_filename[-3:].lower() == ".db":
+        db_filename = db_filename[:-3]
     return shelve.open(db_filename, writeback=True)
 
 
