@@ -37,7 +37,7 @@ def setup_parser():
     # set up arguments for the search-top-users command
     user_parser = subparsers.add_parser("search-top-users",
             help="Search for the top users on specific topics")
-    user_parser.add_argument("filename")
+    user_parser.add_argument("term")
     user_parser.add_argument("-d", "--database",
             help="Specify DB filename in the 'data' directory")
     user_parser.set_defaults(which="search-top-users")
@@ -46,8 +46,6 @@ def setup_parser():
     trends_parser = subparsers.add_parser("search-trends",
             help="Search trending terms for the given WOEID")
     trends_parser.add_argument("WOEID")
-    trends_parser.add_argument("-d", "--database",
-            help="Specify DB filename in the 'data' directory")
     trends_parser.set_defaults(which="search-trends")
 
     # set up arguments for the calc-sentiment command

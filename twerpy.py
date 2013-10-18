@@ -38,9 +38,7 @@ elif args.which == "search-tweets":
     db.close_db_connection(db_dict)
 
 elif args.which == "search-trends":
-    db_dict = db.open_db_connection(db_filename)
-    tweet_handler.search_trends(args.WOEID, db_dict)
-    db.close_db_connection(db_dict)
+    tweet_handler.search_trends(args.WOEID)
 
 elif args.which == "calc-sentiment":
     db_dict = db.open_db_connection(db_filename)
@@ -48,6 +46,11 @@ elif args.which == "calc-sentiment":
     classifier = analysis.load_sentiment(cl_filename)
 
     db.update_sentiments(db_dict, lambda text: analysis.classify_sentiment(classifier, text))
+    db.close_db_connection(db_dict)
+
+elif args.which == "search-top-users":
+    db_dict = db.open_db_connection(db_filename)
+    tweet_handler.search_top_users(args.term, args.term, db_dict)
     db.close_db_connection(db_dict)
 
 elif args.which == "dump-tweets":

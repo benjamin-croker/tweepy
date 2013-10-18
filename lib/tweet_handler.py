@@ -136,6 +136,8 @@ def search_top_users(term, user_group, db_dict, search_count=10):
 
     for user in users:
         db.insert_user(db_dict, user, user_group)
+        if "screen_name" in user and user["screen_name"]:
+            print("{0}:{1}".format(user["screen_name"], user_group))
 
     logging.info("Results written to database")
     return users
@@ -158,7 +160,7 @@ def search_multiple_terms(filename, db_dict, no_RT=False):
             search_tweets(term, group, db_dict, no_RT)
 
 
-def search_trends(WOEID, db_dict):
+def search_trends(WOEID):
     """ finds all the hashtags for the given WOEID then runs a search on
         each of them
     """
@@ -172,8 +174,8 @@ def search_trends(WOEID, db_dict):
     # For each trend, output a line in the format <search_query>:<WOEID>_<trend name>
     # the data returned is in a single-element list for some reason
     for trend in json_data[0]["trends"]:
-        if "query" in trend and trend["query"]:
-            print("{0}:{1}_{2}".format(trend["query"], WOEID, trend["name"]))
+        if "name" in trend and trend["name"]:
+            print("{0}:{1}".format(trend["name"], WOEID))
 
 
 def dump_tweets(db_dict, report_format="csv"):
