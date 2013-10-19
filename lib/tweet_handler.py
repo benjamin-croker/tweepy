@@ -237,9 +237,9 @@ def dump_tweets(db_dict, report_format="csv"):
         with open(os.path.join("reports", "tweets.csv"), "wb") as f:
             writer = csv.writer(f, delimiter=",")
 
-            writer.writerow(header)
+            writer.writerow(["screen_name"] + header)
             for tweet in tweets:
-                writer.writerow([tweet[k].encode("utf-8") for k in header])
+                writer.writerow([tweet["user"]["screen_name"]] + [tweet[k].encode("utf-8") for k in header])
     else:
         raise Exception("Format must be csv or json")
 
