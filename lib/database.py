@@ -3,7 +3,7 @@ database.py:
     File for connecting to an sqlite database to store the data
 """
 import os
-import shelve
+import cPickle
 import sys
 import logging
 
@@ -34,7 +34,7 @@ def reset(db_filename, warning_input=_warning_prompt):
         pass
 
     # create empty lists for tweets and users so append operations can be performed
-    db_dict = open_db_connection(db_filename)
+    db_dict = dict(filename=db_filename)
     db_dict["tweets"] = []
     db_dict["users"] = []
     db_dict["graphs"] = []
@@ -44,17 +44,15 @@ def reset(db_filename, warning_input=_warning_prompt):
 def open_db_connection(db_filename):
     """ remember to close this at the end
     """
-    # check the extension, as shelve will add the .db extension
-    # TODO: check this in windows
-    if db_filename[-3:].lower() == ".db":
-        db_filename = db_filename[:-3]
-    return shelve.open(db_filename, writeback=False)
+    with open(db_filename, "rb") as f:
+        return cPickle.load(f)
 
 
 def close_db_connection(db_dict):
     """ will commit changes as well
     """
-    db_dict.close()
+    with open(db_dict["filename"], "wb") as f:
+        cPickle.dump(db_dict, f)
 
 
 def insert_tweet(db_dict, tweet, tweet_group, sentiment=""):
@@ -64,11 +62,8 @@ def insert_tweet(db_dict, tweet, tweet_group, sentiment=""):
     # add the tweet group and sentiment
     tweet["tweet_group"] = tweet_group
     tweet["sentiment"] = sentiment
+    db_dict["tweets"].append(tweet)
 
-    # the shelve dictionary lists are immutable
-    tweets = db_dict["tweets"]
-    tweets.append(tweet)
-    db_dict["tweets"] = tweets
     # this will always return True. The interface was designed so that failure conditions
     # (which would return false) could be added in later
     return True
@@ -80,11 +75,8 @@ def insert_user(db_dict, user, user_group):
     """
     # add the user group
     user["user_group"] = user_group
+    db_dict["users"].append(user)
 
-    # the shelve dictionary lists are immutable
-    users = db_dict["users"]
-    users.append(user)
-    db_dict["users"] = users
     # this will always return True. The interface was designed so that failure conditions
     # (which would return false) could be added in later
     return True
@@ -103,10 +95,6 @@ def update_sentiments(db_dict, sent_func, update_all=True):
         if update_all or len(tweet["text"]) == 0:
             tweet["sentiment"] = sent_func(tweet["text"])
     db_dict["tweets"] = tweets
-
-    # write changes to disc. This operation may not be needed, but calculating sentiment
-    # is potentially time consuming, so results are saved in case of unexpected exceptions
-    db_dict.sync()
 
 
 def get_tweets(db_dict):

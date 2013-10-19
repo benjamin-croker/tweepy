@@ -15,13 +15,14 @@ class TestDatabaseInit(unittest.TestCase):
         self.setup()
 
         # test the db has the right keys. The set of keys should be equal to the one below
-        keys = {"tweets", "users", "graphs"}
+        keys = {"tweets", "users", "graphs", "filename"}
         self.assertTrue(keys.issubset(set(self.db_dict.keys())))
         self.assertTrue(keys.issuperset(set(self.db_dict.keys())))
 
         # test the database is empty
         for key in self.db_dict:
-            self.assertEqual(len(self.db_dict[key]), 0)
+            if key != "filename":
+                self.assertEqual(len(self.db_dict[key]), 0)
 
 
 class TestDatabaseInsert(unittest.TestCase):
