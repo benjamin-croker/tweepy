@@ -38,7 +38,11 @@ elif args.which == "search-tweets":
     db.close_db_connection(db_dict)
 
 elif args.which == "search-trends":
-    tweet_handler.search_trends(args.WOEID)
+    if args.group:
+        group = args.group
+    else:
+        group = args.WOEID
+    tweet_handler.search_trends(args.WOEID, group)
 
 elif args.which == "calc-sentiment":
     db_dict = db.open_db_connection(db_filename)
@@ -50,7 +54,11 @@ elif args.which == "calc-sentiment":
 
 elif args.which == "search-top-users":
     db_dict = db.open_db_connection(db_filename)
-    tweet_handler.search_top_users(args.term, args.term, db_dict)
+    if args.group:
+        group = args.group
+    else:
+        group = args.term
+    tweet_handler.search_top_users(args.term, group, db_dict)
     db.close_db_connection(db_dict)
 
 elif args.which == "search-user-tweets":
@@ -64,8 +72,13 @@ elif args.which == "dump-tweets":
     else:
         report_format = "csv"
 
+    if args.group:
+        group = args.group
+    else:
+        group = None
+
     db_dict = db.open_db_connection(db_filename)
-    tweet_handler.dump_tweets(db_dict, report_format)
+    tweet_handler.dump_tweets(db_dict, group, report_format)
     db.close_db_connection(db_dict)
 
 elif args.which == "dump-users":
@@ -74,8 +87,13 @@ elif args.which == "dump-users":
     else:
         report_format = "csv"
 
+    if args.group:
+        group = args.group
+    else:
+        group = None
+
     db_dict = db.open_db_connection(db_filename)
-    tweet_handler.dump_users(db_dict, report_format)
+    tweet_handler.dump_users(db_dict, group, report_format)
     db.close_db_connection(db_dict)
 
 elif args.which == "report":

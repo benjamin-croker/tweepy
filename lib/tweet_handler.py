@@ -205,10 +205,11 @@ def search_multiple_users(filename, db_dict):
             search_user_tweets(term, group, db_dict)
 
 
-def search_trends(WOEID):
+def search_trends(WOEID, trend_group):
     """ finds all the hashtags for the given WOEID then runs a search on
         each of them
     """
+
     logging.info("Getting trends for WOEID {0}".format(WOEID))
 
     # encode the query for use in a url
@@ -220,15 +221,20 @@ def search_trends(WOEID):
     # the data returned is in a single-element list for some reason
     for trend in json_data[0]["trends"]:
         if "name" in trend and trend["name"]:
-            print("{0}:{1}".format(trend["name"], WOEID))
+            print("{0}:{1}".format(trend["name"], trend_group))
 
 
-def dump_tweets(db_dict, report_format="csv"):
+def dump_tweets(db_dict, group=None, report_format="csv"):
     """ writes the tweets to the reports folder.
         format must be one of csv or json
     """
     header = ["id_str", "text", "created_at", "tweet_group", "sentiment"]
     tweets = db.get_tweets(db_dict)
+
+    # filter the tweets for a specific group if it is given
+    if group is not None:
+        tweets = [tweet for tweet in tweets if tweet["tweet_group"] == group]
+
     if report_format == "json":
         with open(os.path.join("reports", "tweets.json"), "wb") as f:
             f.write(json.dumps(tweets))
@@ -244,12 +250,17 @@ def dump_tweets(db_dict, report_format="csv"):
         raise Exception("Format must be csv or json")
 
 
-def dump_users(db_dict, report_format="csv"):
+def dump_users(db_dict, group = None, report_format="csv"):
     """ writes the tweets to the reports folder.
         format must be one of csv or json
     """
     header = ["id_str", "screen_name", "user_group"]
     users = db.get_users(db_dict)
+
+    # filter the tweets for a specific group if it is given
+    if group is not None:
+        users = [user for user in users if user["user_group"] == group]
+
     if report_format == "json":
         with open(os.path.join("reports", "users.json"), "wb") as f:
             f.write(json.dumps(users))
