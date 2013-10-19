@@ -53,6 +53,11 @@ elif args.which == "search-top-users":
     tweet_handler.search_top_users(args.term, args.term, db_dict)
     db.close_db_connection(db_dict)
 
+elif args.which == "search-user-tweets":
+    db_dict = db.open_db_connection(db_filename)
+    tweet_handler.search_multiple_users(args.filename, db_dict)
+    db.close_db_connection(db_dict)
+
 elif args.which == "dump-tweets":
     if args.json:
         report_format = "json"

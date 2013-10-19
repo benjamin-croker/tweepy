@@ -54,14 +54,14 @@ def search_tweets(term, tweet_group, db_dict, no_RT=False, search_count=50):
 
         returns the list of tweet objects
     """
-    query_params = "{0}&count={1}".format(urllib.quote(term), search_count)
+    query_params = "?q={0}&count={1}".format(urllib.quote(term), search_count)
     if no_RT:
         query_params += urllib.quote(" exclude:retweets")
 
     logging.info("Searching tweets about {0}".format(term))
 
     # encode the query for use in a url
-    query_url = "https://api.twitter.com/1.1/search/tweets.json?q={0}".format(query_params)
+    query_url = "https://api.twitter.com/1.1/search/tweets.json{0}".format(query_params)
 
     logging.info("Twitter API call: {0}".format(query_url))
     json_data = json.load(twitterreq(query_url, "GET"))
@@ -85,14 +85,14 @@ def search_users(term, user_group, db_dict, search_count=50):
 
         returns the list of user objects
     """
-    query_params = "{0}&count={1}".format(urllib.quote(term), search_count)
+    query_params = "?q={0}&count={1}".format(urllib.quote(term), search_count)
     # don't include retweets when searching for users
     query_params += urllib.quote(" exclude:retweets")
 
     logging.info("Searching for users who tweeted about {0}".format(term))
 
     # encode the query for use in a url
-    query_url = "https://api.twitter.com/1.1/search/tweets.json?q={0}".format(query_params)
+    query_url = "https://api.twitter.com/1.1/search/tweets.json{0}".format(query_params)
 
     logging.info("Twitter API call: {0}".format(query_url))
     json_data = json.load(twitterreq(query_url, "GET"))
@@ -113,19 +113,19 @@ def search_users(term, user_group, db_dict, search_count=50):
     return users
 
 
-def search_top_users(term, user_group, db_dict, search_count=10):
+def search_top_users(term, user_group, db_dict, search_count=20):
     """ Searches for the top users matching a specific term, and stores
         them in the database. Use search_users for users currently tweeting
         about a specific topic
 
         returns a list of user objects
     """
-    query_params = "{0}&count={1}".format(urllib.quote(term), search_count)
+    query_params = "?q={0}&count={1}".format(urllib.quote(term), search_count)
 
-    logging.info("Searching for top users for {0}".format(query_params))
+    logging.info("Searching for top users for {0}".format(term))
 
     # encode the query for use in a url
-    query_url = "https://api.twitter.com/1.1/users/search.json?q={0}".format(query_params)
+    query_url = "https://api.twitter.com/1.1/users/search.json{0}".format(query_params)
 
     logging.info("Twitter API call: {0}".format(query_url))
     json_data = json.load(twitterreq(query_url, "GET"))
@@ -143,6 +143,34 @@ def search_top_users(term, user_group, db_dict, search_count=10):
     return users
 
 
+def search_user_tweets(screen_name, user_group, db_dict, search_count=200):
+    """ Searches for the top users matching a specific term, and stores
+        them in the database. Use search_users for users currently tweeting
+        about a specific topic
+
+        returns a list of user objects
+    """
+    query_params = "?screen_name={0}&count={1}".format(screen_name, search_count)
+
+    logging.info("Searching for tweets by {0}".format(screen_name))
+
+    # encode the query for use in a url
+    query_url = "https://api.twitter.com/1.1/statuses/user_timeline.json{0}".format(query_params)
+
+    logging.info("Twitter API call: {0}".format(query_url))
+    json_data = json.load(twitterreq(query_url, "GET"))
+    logging.info("Searching for {0} completed".format(screen_name))
+
+    # save the results
+    tweets = json_data
+
+    for tweet in tweets:
+        db.insert_tweet(db_dict, tweet, user_group)
+
+    logging.info("Results written to database")
+    return tweets
+
+
 def search_multiple_terms(filename, db_dict, no_RT=False):
     """ opens a file, which contains one search term per line,
         and runs a search for each term
@@ -158,6 +186,23 @@ def search_multiple_terms(filename, db_dict, no_RT=False):
                 group = group[:-1]
 
             search_tweets(term, group, db_dict, no_RT)
+
+
+def search_multiple_users(filename, db_dict):
+    """ opens a file, which contains one search term per line,
+        and runs a search for each term
+    """
+    with open(filename) as f:
+        for line in f.readlines():
+            # split the line into a query and group
+            # check the line to see if it's formatted correctly
+            if len(line.split(":")) != 2:
+                raise Exception("Error in search term \n {0} \n Line must be formatted as <term>:<group>")
+            [term, group] = line.split(":")
+            if group.endswith("\n"):
+                group = group[:-1]
+
+            search_user_tweets(term, group, db_dict)
 
 
 def search_trends(WOEID):

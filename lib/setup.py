@@ -42,6 +42,14 @@ def setup_parser():
             help="Specify DB filename in the 'data' directory")
     user_parser.set_defaults(which="search-top-users")
 
+    # set up arguments for the search-user-tweets command
+    user_parser = subparsers.add_parser("search-user-tweets",
+            help="Search for tweets from specific users")
+    user_parser.add_argument("filename")
+    user_parser.add_argument("-d", "--database",
+            help="Specify DB filename in the 'data' directory")
+    user_parser.set_defaults(which="search-user-tweets")
+
     # set up arguments for the search-trends command
     trends_parser = subparsers.add_parser("search-trends",
             help="Search trending terms for the given WOEID")
