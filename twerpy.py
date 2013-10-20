@@ -72,13 +72,8 @@ elif args.which == "dump-tweets":
     else:
         report_format = "csv"
 
-    if args.group:
-        group = args.group
-    else:
-        group = None
-
     db_dict = db.open_db_connection(db_filename)
-    tweet_handler.dump_tweets(db_dict, group, report_format)
+    tweet_handler.dump_tweets(db_dict, args.group, args.output, report_format)
     db.close_db_connection(db_dict)
 
 elif args.which == "dump-users":
@@ -87,13 +82,8 @@ elif args.which == "dump-users":
     else:
         report_format = "csv"
 
-    if args.group:
-        group = args.group
-    else:
-        group = None
-
     db_dict = db.open_db_connection(db_filename)
-    tweet_handler.dump_users(db_dict, group, report_format)
+    tweet_handler.dump_users(db_dict, args.group, args.output, report_format)
     db.close_db_connection(db_dict)
 
 elif args.which == "report":
@@ -106,9 +96,3 @@ elif args.which == "report":
     tweet_handler.dump_word_frequencies(db_dict, report_format)
     tweet_handler.dump_sentiment_frequencies(db_dict, report_format)
     db.close_db_connection(db_dict)
-
-
-
-
-
-

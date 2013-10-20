@@ -81,20 +81,25 @@ def setup_parser():
 
     # set up arguments for the dump-tweets command
     dump_tweets_parser = subparsers.add_parser("dump-tweets",
-            help="Dumps all the data to tweets.csv in the 'reports' directory")
+            help="Dumps all the tweet data to tweets.csv in the 'reports' directory, or in a location specified by the -o option")
     dump_tweets_parser.add_argument("-d", "--database",
             help="Specify DB filename in 'data' directory")
     dump_tweets_parser.add_argument("-g", "--group",
             help="Specify a group")
+    dump_tweets_parser.add_argument("-o", "--output",
+            help="Output filename")
+    dump_tweets_parser.add_argument("--json", help="Report data in JSON format")
     dump_tweets_parser.set_defaults(which="dump-tweets")
 
     # set up arguments for the dump-users command
     dump_users_parser = subparsers.add_parser("dump-users",
-            help="Dumps all the data to users.csv in the 'reports' directory")
+            help="Dumps all the user data to users.csv in the 'reports' directory, or in a location specified by the -o option")
     dump_users_parser.add_argument("-d", "--database",
             help="Specify DB filename in 'data' directory")
     dump_users_parser.add_argument("-g", "--group",
             help="Specify a group")
+    dump_users_parser.add_argument("-o", "--output",
+            help="Output filename")
     dump_users_parser.add_argument("--json", help="Report data in JSON format")
     dump_users_parser.set_defaults(which="dump-users")
 
