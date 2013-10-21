@@ -6,8 +6,13 @@ from lib import setup
 
 # set up the arguments
 args = setup.setup_parser().parse_args()
+
 # set up logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s',
+if args.debug:
+    level = logging.DEBUG
+else:
+    level = logging.INFO
+logging.basicConfig(level=level, format='%(asctime)s %(message)s',
                     datefmt='%Y-%m-%d %H:%M:%S')
 
 # if we're doing a setup, run that then quit

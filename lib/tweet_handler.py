@@ -63,7 +63,7 @@ def search_tweets(term, tweet_group, db_dict, no_RT=False, search_count=50):
     # encode the query for use in a url
     query_url = "https://api.twitter.com/1.1/search/tweets.json{0}".format(query_params)
 
-    logging.info("Twitter API call: {0}".format(query_url))
+    logging.debug("Twitter API call: {0}".format(query_url))
     json_data = json.load(twitterreq(query_url, "GET"))
     logging.info("Searching for {0} completed".format(term))
 
@@ -94,7 +94,7 @@ def search_users(term, user_group, db_dict, search_count=50):
     # encode the query for use in a url
     query_url = "https://api.twitter.com/1.1/search/tweets.json{0}".format(query_params)
 
-    logging.info("Twitter API call: {0}".format(query_url))
+    logging.debug("Twitter API call: {0}".format(query_url))
     json_data = json.load(twitterreq(query_url, "GET"))
     logging.info("Searching for {0} completed".format(term))
 
@@ -127,7 +127,7 @@ def search_top_users(term, user_group, db_dict, search_count=20):
     # encode the query for use in a url
     query_url = "https://api.twitter.com/1.1/users/search.json{0}".format(query_params)
 
-    logging.info("Twitter API call: {0}".format(query_url))
+    logging.debug("Twitter API call: {0}".format(query_url))
     json_data = json.load(twitterreq(query_url, "GET"))
     logging.info("Searching for {0} completed".format(term))
 
@@ -157,7 +157,7 @@ def search_user_tweets(screen_name, user_group, db_dict, search_count=200):
     # encode the query for use in a url
     query_url = "https://api.twitter.com/1.1/statuses/user_timeline.json{0}".format(query_params)
 
-    logging.info("Twitter API call: {0}".format(query_url))
+    logging.debug("Twitter API call: {0}".format(query_url))
     json_data = json.load(twitterreq(query_url, "GET"))
     logging.info("Searching for {0} completed".format(screen_name))
 
@@ -215,6 +215,7 @@ def search_trends(WOEID, trend_group):
     # encode the query for use in a url
     query_url = "https://api.twitter.com/1.1/trends/place.json?id={0}".format(WOEID)
 
+    logging.debug("Twitter API call: {0}".format(query_url))
     json_data = json.load(twitterreq(query_url, "GET"))
 
     # For each trend, output a line in the format <search_query>:<WOEID>_<trend name>

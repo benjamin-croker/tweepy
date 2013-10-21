@@ -5,7 +5,6 @@ database.py:
 import os
 import cPickle
 import sys
-import logging
 
 
 def _warning_prompt(db_filename):
@@ -26,7 +25,6 @@ def reset(db_filename, warning_input=_warning_prompt):
         print("quitting")
         sys.exit()
 
-    logging.info("Setting up the database")
     # remove the file if it exists
     try:
         os.remove(db_filename)

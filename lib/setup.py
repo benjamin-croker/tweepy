@@ -7,101 +7,88 @@ import database as db
 
 
 def setup_parser():
-    parser = argparse.ArgumentParser()
-    subparsers = parser.add_subparsers()
+    parser = argparse.ArgumentParser(add_help=False)
 
+    # add common arguments
+    common = argparse.ArgumentParser(add_help=False)
+    common.add_argument("--debug", action="store_true", help="Show debug information")
+    common.add_argument("-d", "--database")
+
+    subparsers = parser.add_subparsers()
     # set up arguments for the setup command
-    setup_parser = subparsers.add_parser("setup",
-            help="Set up the authentification, database and sentiment classifier")
-    setup_parser.add_argument("-d", "--database", help="Set up database only. Specify DB filename in data directory")
-    setup_parser.set_defaults(which="setup")
+    setup_p = subparsers.add_parser("setup", parents=[common],
+            help="""Set up the authentication, database and sentiment classifier.
+            If a database is specified with the --database option, only the database is set up""")
+    setup_p.set_defaults(which="setup")
 
     # set up arguments for the search-tweets command
-    tweet_parser = subparsers.add_parser("search-tweets",
+    search_tweets_p = subparsers.add_parser("search-tweets", parents=[common],
             help="Search for tweets about specific topics")
-    tweet_parser.add_argument("filename")
-    tweet_parser.add_argument("-d", "--database",
-            help="Specify DB filename in the 'data' directory")
-    tweet_parser.add_argument("--no_RT",
+    search_tweets_p.add_argument("filename")
+    search_tweets_p.add_argument("--no_RT",
             help="do not include retweets in the search", action="store_true")
-    tweet_parser.set_defaults(which="search-tweets")
+    search_tweets_p.set_defaults(which="search-tweets")
 
     # set up arguments for the search-users command
-    user_parser = subparsers.add_parser("search-users",
+    search_users_p = subparsers.add_parser("search-users", parents=[common],
             help="Search users who recently tweeted about specific topics")
-    user_parser.add_argument("filename")
-    user_parser.add_argument("-d", "--database",
-            help="Specify DB filename in the 'data' directory")
-    user_parser.set_defaults(which="search-users")
+    search_users_p.add_argument("filename")
+    search_users_p.set_defaults(which="search-users")
 
     # set up arguments for the search-top-users command
-    top_user_parser = subparsers.add_parser("search-top-users",
+    search_top_user_p = subparsers.add_parser("search-top-users", parents=[common],
             help="Search for the top users on specific topics")
-    top_user_parser.add_argument("term")
-    top_user_parser.add_argument("-d", "--database",
-            help="Specify DB filename in the 'data' directory")
-    top_user_parser.add_argument("-g", "--group",
+    search_top_user_p.add_argument("term")
+    search_top_user_p.add_argument("-g", "--group",
             help="Specify a group")
-    top_user_parser.set_defaults(which="search-top-users")
+    search_top_user_p.set_defaults(which="search-top-users")
 
     # set up arguments for the search-user-tweets command
-    user_tweets_parser = subparsers.add_parser("search-user-tweets",
+    user_tweets_parser = subparsers.add_parser("search-user-tweets", parents=[common],
             help="Search for tweets from specific users")
     user_tweets_parser.add_argument("filename")
-    user_tweets_parser.add_argument("-d", "--database",
-            help="Specify DB filename in the 'data' directory")
     user_tweets_parser.set_defaults(which="search-user-tweets")
 
     # set up arguments for the search-trends command
-    trends_parser = subparsers.add_parser("search-trends",
+    search_trends_p = subparsers.add_parser("search-trends", parents=[common],
             help="Search trending terms for the given WOEID")
-    trends_parser.add_argument("WOEID")
-    trends_parser.add_argument("-d", "--database",
-            help="Specify DB filename in the 'data' directory")
-    trends_parser.add_argument("-g", "--group",
+    search_trends_p.add_argument("WOEID")
+    search_trends_p.add_argument("-g", "--group",
             help="Specify a group")
-    trends_parser.set_defaults(which="search-trends")
+    search_trends_p.set_defaults(which="search-trends")
 
     # set up arguments for the calc-sentiment command
-    calc_parser = subparsers.add_parser("calc-sentiment",
+    calc_sentiment_p = subparsers.add_parser("calc-sentiment", parents=[common],
             help="Calculates the sentiment for all tweets in the database")
-    calc_parser.add_argument("-d", "--database",
-            help="Specify DB filename in the 'data' directory")
-    calc_parser.add_argument("--force",
+    calc_sentiment_p.add_argument("--force",
             help="Recalculate the sentiment for each tweet, even if it is already calculated")
-    calc_parser.set_defaults(which="calc-sentiment")
+    calc_sentiment_p.set_defaults(which="calc-sentiment")
 
     # set up arguments for the report command
-    report_parser = subparsers.add_parser("report",
+    report_p = subparsers.add_parser("report", parents=[common],
             help="Writes CSV (default) or JSON reports to the 'reports' directory")
-    report_parser.add_argument("-d", "--database",
-            help="Specify DB filename in 'data' directory")
-    report_parser.add_argument("--json", help="Report data in JSON format")
-    report_parser.set_defaults(which="report")
+    report_p.add_argument("--json", help="Report data in JSON format")
+    report_p.set_defaults(which="report")
 
     # set up arguments for the dump-tweets command
-    dump_tweets_parser = subparsers.add_parser("dump-tweets",
+    dump_tweets_p = subparsers.add_parser("dump-tweets", parents=[common],
             help="Dumps all the tweet data to tweets.csv in the 'reports' directory, or in a location specified by the -o option")
-    dump_tweets_parser.add_argument("-d", "--database",
-            help="Specify DB filename in 'data' directory")
-    dump_tweets_parser.add_argument("-g", "--group",
+    dump_tweets_p.add_argument("-g", "--group",
             help="Specify a group")
-    dump_tweets_parser.add_argument("-o", "--output",
+    dump_tweets_p.add_argument("-o", "--output",
             help="Output filename")
-    dump_tweets_parser.add_argument("--json", help="Report data in JSON format")
-    dump_tweets_parser.set_defaults(which="dump-tweets")
+    dump_tweets_p.add_argument("--json", help="Report data in JSON format")
+    dump_tweets_p.set_defaults(which="dump-tweets")
 
     # set up arguments for the dump-users command
-    dump_users_parser = subparsers.add_parser("dump-users",
+    dump_users_p = subparsers.add_parser("dump-users", parents=[common],
             help="Dumps all the user data to users.csv in the 'reports' directory, or in a location specified by the -o option")
-    dump_users_parser.add_argument("-d", "--database",
-            help="Specify DB filename in 'data' directory")
-    dump_users_parser.add_argument("-g", "--group",
+    dump_users_p.add_argument("-g", "--group",
             help="Specify a group")
-    dump_users_parser.add_argument("-o", "--output",
+    dump_users_p.add_argument("-o", "--output",
             help="Output filename")
-    dump_users_parser.add_argument("--json", help="Report data in JSON format")
-    dump_users_parser.set_defaults(which="dump-users")
+    dump_users_p.add_argument("--json", help="Report data in JSON format")
+    dump_users_p.set_defaults(which="dump-users")
 
     return parser
 
