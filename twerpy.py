@@ -97,7 +97,9 @@ elif args.which == "report":
     else:
         report_format = "csv"
 
+    filter_stopwords = not args.inc_stopwords
+
     db_dict = db.open_db_connection(db_filename)
-    tweet_handler.dump_word_frequencies(db_dict, report_format)
+    tweet_handler.dump_word_frequencies(db_dict, report_format, filter_stopwords=filter_stopwords)
     tweet_handler.dump_sentiment_frequencies(db_dict, report_format)
     db.close_db_connection(db_dict)

@@ -68,6 +68,8 @@ def setup_parser():
     report_p = subparsers.add_parser("report", parents=[common],
             help="Writes CSV (default) or JSON reports to the 'reports' directory")
     report_p.add_argument("--json", help="Report data in JSON format")
+    report_p.add_argument("--inc_stopwords", action="store_true",
+                          help="Include stopwords in tweet analysis")
     report_p.set_defaults(which="report")
 
     # set up arguments for the dump-tweets command

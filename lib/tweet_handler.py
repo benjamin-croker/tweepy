@@ -23,10 +23,12 @@ def ctrl_c_handler(signum, frame):
 signal.signal(signal.SIGINT, ctrl_c_handler)
 
 
-def twitterreq(url, http_method="GET", parameters=[]):
+def twitterreq(url, http_method="GET", parameters=()):
     """ Construct, sign, and open a twitter request
         using the hard-coded credentials above.
     """
+    # convert the parameters to a list. The default argument is a tuple,
+    # since it is good practice to have non-mutable default arguments
     req = oauth.Request.from_consumer_and_token(oauth_consumer,
                                                 token=oauth_token,
                                                 http_method=http_method,
@@ -283,12 +285,12 @@ def dump_users(db_dict, group=None, filename=None, report_format="csv"):
             raise Exception("Format must be csv or json")
 
 
-def dump_word_frequencies(db_dict, report_format="csv"):
+def dump_word_frequencies(db_dict, report_format="csv", filter_stopwords=True):
     """ writes the word frequencies to the "reports" folder.
         Format must be one of csv or json
     """
     tweets = db.get_tweets(db_dict)
-    word_freqs = analysis.word_frequency(tweets)
+    word_freqs = analysis.word_frequency(tweets, filter_stopwords=filter_stopwords)
 
     if report_format == "json":
         with open(os.path.join("reports", "word_freq.json"), "wb") as f:

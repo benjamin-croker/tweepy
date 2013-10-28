@@ -3,11 +3,12 @@ import nltk
 from nltk.tokenize import RegexpTokenizer
 from nltk.corpus import movie_reviews
 from nltk.classify import NaiveBayesClassifier
+from nltk.corpus import stopwords
 import os
 import logging
 
 
-def word_frequency(tweets, min_length=4):
+def word_frequency(tweets, filter_stopwords=True, noun_verb_only=False):
     # use a regular expression tokeniser
     tokenizer = RegexpTokenizer(r'\w+')
 
@@ -18,10 +19,12 @@ def word_frequency(tweets, min_length=4):
     group_fds = dict([(group, nltk.FreqDist()) for group in ["total"] + search_groups])
 
     for tweet in tweets:
-        for word in tokenizer.tokenize(tweet["text"].lower()):
-            if len(word) >= min_length:
-                group_fds["total"].inc(word)
-                group_fds["{0}_group".format(tweet["tweet_group"])].inc(word)
+        words = tokenizer.tokenize(tweet["text"].lower())
+        if filter_stopwords:
+            words = [w for w in words if w not in stopwords.words("english")]
+        for word in words:
+            group_fds["total"].inc(word)
+            group_fds["{0}_group".format(tweet["tweet_group"])].inc(word)
 
     # get a list of all the words, in decreasing frequency order
     words = group_fds["total"].keys()
