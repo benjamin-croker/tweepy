@@ -91,6 +91,19 @@ class TestDatabaseInsert(unittest.TestCase):
         tweets = db.get_tweets(self.db_dict)
         self.assertEqual(tweets[2]["sentiment"], "neg")
 
+    def test_uniqueness(self):
+        """ check that integrity constraints are enforced
+        """
+        self.setup()
+
+        # check without enforcing
+        self.assertTrue(db.insert_tweet(self.db_dict, self.example_tweets[0], "group"))
+        self.assertTrue(db.insert_tweet(self.db_dict, self.example_tweets[0], "group"))
+
+        # enforce uniqueness
+        self.assertFalse(db.insert_tweet(self.db_dict, self.example_tweets[0], "group",
+                                         id_key="id_str"))
+
 
 class TestTweetGroups(unittest.TestCase):
 

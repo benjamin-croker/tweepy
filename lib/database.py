@@ -14,8 +14,14 @@ def _warning_prompt(db_filename):
     return raw_input("Type 'yes' to proceed, or anything else to quit: ")
 
 
+def _check_unique(l_dict, key, value):
+    """ returns true if none of the dictionaries in l_dict have the given
+        value for the given key
+    """
+    return not value in [d[key] for d in l_dict if key in d]
+
 def reset(db_filename, warning_input=_warning_prompt):
-    """ creates a new sqlite database with the given file name.
+    """ creates a new database with the given file name.
         any existing database will be overwritten
 
         warning_input is a function which takes a database name and returns
@@ -47,37 +53,48 @@ def open_db_connection(db_filename):
 
 
 def close_db_connection(db_dict):
-    """ will commit changes as well
+    """ save the database back to disc
     """
     with open(db_dict["filename"], "wb") as f:
         cPickle.dump(db_dict, f)
 
 
-def insert_tweet(db_dict, tweet, tweet_group, sentiment=""):
+def insert_tweet(db_dict, tweet, tweet_group, sentiment="", id_key=None):
     """ Inserts the tweet data (as a json object) into the database, adding "tweet_group"
         and "sentiment" key/value pairs. Returns True if the insertion was successful
+
+        id_key is used to enforce uniqueness. If it is given, all tweets in the
+        database are checked on that key (e.g. "id_str"), and the tweet will only
+        be inserted if it matches
     """
     # add the tweet group and sentiment
     tweet["tweet_group"] = tweet_group
     tweet["sentiment"] = sentiment
-    db_dict["tweets"].append(tweet)
 
-    # this will always return True. The interface was designed so that failure conditions
-    # (which would return false) could be added in later
-    return True
+    if id_key is None or _check_unique(db_dict["tweets"], id_key, tweet[id_key]):
+        db_dict["tweets"].append(tweet)
+        return True
+    else:
+        return False
 
 
-def insert_user(db_dict, user, user_group):
+def insert_user(db_dict, user, user_group, id_key=None):
     """ inserts the user data (as a json object) into the database, adding "user_group"
         key/value pair. Returns True if the insertion was successful
+
+        id_key is used to enforce uniqueness. If it is given, all tweets in the
+        database are checked on that key (e.g. "id_str"), and the tweet will only
+        be inserted if it matches
     """
     # add the user group
     user["user_group"] = user_group
     db_dict["users"].append(user)
 
-    # this will always return True. The interface was designed so that failure conditions
-    # (which would return false) could be added in later
-    return True
+    if id_key is None or _check_unique(db_dict["users"], id_key, user[id_key]):
+        db_dict["users"].append(user)
+        return True
+    else:
+        return False
 
 
 def update_sentiments(db_dict, sent_func, update_all=True):
