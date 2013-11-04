@@ -25,8 +25,9 @@ signal.signal(signal.SIGINT, ctrl_c_handler)
 
 
 def twitterreq(url, http_method="GET", parameters=()):
-    """ Construct, sign, and open a twitter request
-        using the hard-coded credentials above.
+    """ Constructs, signs and opens a twitter request
+
+        returns the data as a json encoded variable
     """
     # convert the parameters to a list. The default argument is a tuple,
     # since it is good practice to have non-mutable default arguments
@@ -48,8 +49,12 @@ def twitterreq(url, http_method="GET", parameters=()):
     opener.add_handler(urllib.HTTPHandler())
     opener.add_handler(urllib.HTTPSHandler())
     response = opener.open(url, encoded_post_data)
-
-    return response
+    try:
+        json_response = json.load(response)
+    except ValueError:
+        logging.error("Received invalid twitter API response: {0}".format(response))
+        raise
+    return json_response
 
 
 def search_tweets(term, tweet_group, db_dict, no_RT=False, search_count=50):
@@ -67,7 +72,7 @@ def search_tweets(term, tweet_group, db_dict, no_RT=False, search_count=50):
     query_url = "https://api.twitter.com/1.1/search/tweets.json{0}".format(query_params)
 
     logging.debug("Twitter API call: {0}".format(query_url))
-    json_data = json.load(twitterreq(query_url, "GET"))
+    json_data = twitterreq(query_url, "GET")
     logging.info("Searching for {0} completed".format(term))
 
     if not "statuses" in json_data:
@@ -98,7 +103,7 @@ def search_users(term, user_group, db_dict, search_count=50):
     query_url = "https://api.twitter.com/1.1/search/tweets.json{0}".format(query_params)
 
     logging.debug("Twitter API call: {0}".format(query_url))
-    json_data = json.load(twitterreq(query_url, "GET"))
+    json_data = twitterreq(query_url, "GET")
     logging.info("Searching for {0} completed".format(term))
 
     if not "statuses" in json_data:
@@ -131,7 +136,7 @@ def search_top_users(term, user_group, db_dict, search_count=20):
     query_url = "https://api.twitter.com/1.1/users/search.json{0}".format(query_params)
 
     logging.debug("Twitter API call: {0}".format(query_url))
-    json_data = json.load(twitterreq(query_url, "GET"))
+    json_data = twitterreq(query_url, "GET")
     logging.info("Searching for {0} completed".format(term))
 
     # save the results
@@ -161,8 +166,7 @@ def search_user_tweets(screen_name, user_group, db_dict, search_count=200):
     query_url = "https://api.twitter.com/1.1/statuses/user_timeline.json{0}".format(query_params)
 
     logging.debug("Twitter API call: {0}".format(query_url))
-    json_data = json.load(twitterreq(query_url, "GET"))
-    logging.info("Searching for {0} completed".format(screen_name))
+    json_data = twitterreq(query_url, "GET")
 
     # save the results
     tweets = json_data
@@ -236,7 +240,7 @@ def search_suggested_users(db_dict):
     # define the query url to get the suggestion categories
     query_url = "https://api.twitter.com/1.1/users/suggestions.json"
     logging.debug("Twitter API call: {0}".format(query_url))
-    json_data = json.load(twitterreq(query_url, "GET"))
+    json_data = twitterreq(query_url, "GET")
 
     # get the suggestion slugs (i.e. suggested categories)
     slugs = [d["slug"] for d in json_data]
@@ -246,7 +250,7 @@ def search_suggested_users(db_dict):
         # define the query url to get the users
         query_url = "https://api.twitter.com/1.1/users/suggestions/{0}.json".format(slug)
         logging.debug("Twitter API call: {0}".format(query_url))
-        json_data = json.load(twitterreq(query_url, "GET"))
+        json_data = twitterreq(query_url, "GET")
 
         if "users" not in json_data:
             raise Exception("JSON data has no users: {0}".format(json_data))
@@ -258,7 +262,7 @@ def search_suggested_users(db_dict):
                 print("{0}:{1}".format(user["screen_name"], slug))
 
     logging.info("Results written to database")
-    return users
+    return slugs
 
 
 def search_trends(WOEID, trend_group):
@@ -272,7 +276,7 @@ def search_trends(WOEID, trend_group):
     query_url = "https://api.twitter.com/1.1/trends/place.json?id={0}".format(WOEID)
 
     logging.debug("Twitter API call: {0}".format(query_url))
-    json_data = json.load(twitterreq(query_url, "GET"))
+    json_data = twitterreq(query_url, "GET")
 
     # For each trend, output a line in the format <search_query>:<WOEID>_<trend name>
     # the data returned is in a single-element list for some reason
