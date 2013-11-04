@@ -44,10 +44,15 @@ def setup_parser():
     search_top_user_p.set_defaults(which="search-top-users")
 
     # set up arguments for the search-user-tweets command
-    user_tweets_parser = subparsers.add_parser("search-user-tweets", parents=[common],
+    search_user_tweets_p = subparsers.add_parser("search-user-tweets", parents=[common],
             help="Search for tweets from specific users")
-    user_tweets_parser.add_argument("filename")
-    user_tweets_parser.set_defaults(which="search-user-tweets")
+    search_user_tweets_p.add_argument("filename")
+    search_user_tweets_p.set_defaults(which="search-user-tweets")
+
+    # set up arguments for the search-suggested-users command
+    search_suggested_users_p = subparsers.add_parser("search-suggested-users", parents=[common],
+            help="Search for suggested users. Outputs the user and category")
+    search_suggested_users_p.set_defaults(which="search-suggested-users")
 
     # set up arguments for the search-trends command
     search_trends_p = subparsers.add_parser("search-trends", parents=[common],

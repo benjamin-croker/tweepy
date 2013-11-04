@@ -207,6 +207,37 @@ def search_multiple_users(filename, db_dict):
             search_user_tweets(term, group, db_dict)
 
 
+def search_suggested_users(db_dict):
+    logging.info("Getting suggested users")
+
+    # define the query url to get the suggestion categories
+    query_url = "https://api.twitter.com/1.1/users/suggestions.json"
+    logging.debug("Twitter API call: {0}".format(query_url))
+    json_data = json.load(twitterreq(query_url, "GET"))
+
+    # get the suggestion slugs (i.e. suggested categories)
+    slugs = [d["slug"] for d in json_data]
+
+    # get the users for each slug
+    for slug in slugs:
+        # define the query url to get the users
+        query_url = "https://api.twitter.com/1.1/users/suggestions/{0}.json".format(slug)
+        logging.debug("Twitter API call: {0}".format(query_url))
+        json_data = json.load(twitterreq(query_url, "GET"))
+
+        if "users" not in json_data:
+            raise Exception("JSON data has no users: {0}".format(json_data))
+        users = json_data["users"]
+
+        for user in users:
+            db.insert_user(db_dict, user, slug)
+            if "screen_name" in user and user["screen_name"]:
+                print("{0}:{1}".format(user["screen_name"], slug))
+
+    logging.info("Results written to database")
+    return users
+
+
 def search_trends(WOEID, trend_group):
     """ finds all the hashtags for the given WOEID then runs a search on
         each of them
