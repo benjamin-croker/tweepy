@@ -5,6 +5,7 @@ import logging
 import signal
 import csv
 import os
+import time
 
 import database as db
 import analysis
@@ -173,11 +174,16 @@ def search_user_tweets(screen_name, user_group, db_dict, search_count=200):
     return tweets
 
 
-def search_multiple_terms(filename, db_dict, no_RT=False):
+def search_multiple_terms(filename, db_dict, no_RT=False, rate_limit=180):
     """ opens a file, which contains one search term per line,
         and runs a search for each term
+
+        rate limit sets the number of terms what will be searched before waiting
+        15 mins for the next window
     """
     with open(filename) as f:
+        # number of terms we've searched for
+        items = 0
         for line in f.readlines():
             # split the line into a query and group
             # check the line to see if it's formatted correctly
@@ -189,12 +195,23 @@ def search_multiple_terms(filename, db_dict, no_RT=False):
 
             search_tweets(term, group, db_dict, no_RT)
 
+            items += 1
+            if items >= rate_limit:
+                logging.info("Sleeping for 15 mins to avoid rate limiting")
+                time.sleep(900)
+                items = 0
 
-def search_multiple_users(filename, db_dict):
+
+def search_multiple_users(filename, db_dict, rate_limit=180):
     """ opens a file, which contains one search term per line,
         and runs a search for each term
+
+        rate limit sets the number of terms what will be searched before waiting
+        15 mins for the next window
     """
     with open(filename) as f:
+        # number of users we've searched for
+        items = 0
         for line in f.readlines():
             # split the line into a query and group
             # check the line to see if it's formatted correctly
@@ -205,6 +222,12 @@ def search_multiple_users(filename, db_dict):
                 group = group[:-1]
 
             search_user_tweets(term, group, db_dict)
+
+            items += 1
+            if items >= rate_limit:
+                logging.info("Sleeping for 15 mins to avoid rate limiting")
+                time.sleep(900)
+                items = 0
 
 
 def search_suggested_users(db_dict):
