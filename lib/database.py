@@ -5,6 +5,73 @@ database.py:
 import os
 import cPickle
 import sys
+import sqlite3
+import json
+
+# can't call tweet.text text, as TEXT is a keyword
+_create_tables_sql = ["""
+CREATE TABLE tweets (
+    id_str TEXT,
+    user_id_str TEXT,
+    tweet_text TEXT,
+    created_at TEXT,
+    favourite_count INTEGER,
+    retweet_count INTEGER,
+    user_id_str TEXT
+    tweet_group TEXT,
+    PRIMARY KEY (id_str, tweet_group)
+);
+""",
+                      """
+CREATE TABLE users (
+    id_str TEXT,
+    name TEXT,
+    screen_name TEXT,
+    created_at TEXT,
+    description TEXT,
+    followers_count INTEGER,
+    friends_count INTEGER,
+    statuses_count INTEGER,
+    user_group TEXT,
+    PRIMARY KEY (id_str, user_group)
+);
+"""]
+
+# 9 fields
+_insert_tweet_sql = """
+INSERT INTO tweets VALUES (?,?,?,?,?,?,?,?,?);
+"""
+
+# 10 fields
+_insert_user_sql = """
+INSERT INTO tweets VALUES (?,?,?,?,?,?,?,?,?,?);
+"""
+
+_get_all_tweets_sql = """
+SELECT * FROM tweets;
+"""
+
+_get_group_tweets_sql = """
+SELECT * FROM tweets
+WHERE tweet_group=?;
+"""
+
+_get_all_users_sql = """
+SELECT * FROM users;
+"""
+
+_get_group_users_sql = """
+SELECT * FROM users
+WHERE tweet_group=?;
+"""
+
+_get_all_tweet_groups_sql = """
+SELECT tweet_group FROM tweets GROUP BY tweet_group;
+"""
+
+_get_all_user_groups_sql = """
+SELECT user_group FROM tweets GROUP BY user_group;
+"""
 
 
 def _warning_prompt(db_filename):
@@ -14,11 +81,19 @@ def _warning_prompt(db_filename):
     return raw_input("Type 'yes' to proceed, or anything else to quit: ")
 
 
-def _check_unique(l_dict, key, value):
-    """ returns true if none of the dictionaries in l_dict have the given
-        value for the given key
+def tweets_header(con):
+    """ returns a list of the headers in the tweets table
     """
-    return not value in [d[key] for d in l_dict if key in d]
+    cursor = con.execute(_get_all_tweets_sql)
+    return [c[0] for c in cursor.description]
+
+
+def user_header(con):
+    """ returns a list of the headers in the user table
+    """
+    cursor = con.execute(_get_all_users_sql)
+    return [c[0] for c in cursor.description]
+
 
 def reset(db_filename, warning_input=_warning_prompt):
     """ creates a new database with the given file name.
@@ -37,96 +112,87 @@ def reset(db_filename, warning_input=_warning_prompt):
     except OSError:
         pass
 
-    # create empty lists for tweets and users so append operations can be performed
-    db_dict = dict(filename=db_filename)
-    db_dict["tweets"] = []
-    db_dict["users"] = []
-    db_dict["graphs"] = []
-    close_db_connection(db_dict)
+     # create the database tables
+    con = open_db_connection(db_filename)
+    for _create_table_sql in _create_tables_sql:
+        con.execute(_create_table_sql)
+    con.commit()
+    con.close()
 
 
 def open_db_connection(db_filename):
     """ remember to close this at the end
     """
-    with open(db_filename, "rb") as f:
-        return cPickle.load(f)
+    return sqlite3.connect(db_filename)
 
 
-def close_db_connection(db_dict):
-    """ save the database back to disc
+def close_db_connection(con):
+    """ will commit changes as well
     """
-    with open(db_dict["filename"], "wb") as f:
-        cPickle.dump(db_dict, f)
+    con.commit()
+    con.close()
 
 
-def insert_tweet(db_dict, tweet, tweet_group, sentiment="", id_key=None):
-    """ Inserts the tweet data (as a json object) into the database, adding "tweet_group"
-        and "sentiment" key/value pairs. Returns True if the insertion was successful
+def insert_tweet(con, tweet, tweet_group):
+    """ Inserts the tweet data (passed as a json object) into the database, adding
+        "tweet_group" field. Returns True if the insertion was successful.
 
-        id_key is used to enforce uniqueness. If it is given, all tweets in the
-        database are checked on that key (e.g. "id_str"), and the tweet will only
-        be inserted if it matches
+        If another tweet with the same id and tweet_group is given, it will not be
+        inserted.
     """
-    # add the tweet group and sentiment
-    tweet["tweet_group"] = tweet_group
-    tweet["sentiment"] = sentiment
+    # get the fields out of the JSON object, inserting None, if the key doesn't exist
+    index_names = ["id_str", "text", "created_at", "favourite_count", "retweet_count"]
+    tweet_data = (tweet[i] if i in tweet else None for i in index_names)
 
-    if id_key is None or _check_unique(db_dict["tweets"], id_key, tweet[id_key]):
-        db_dict["tweets"].append(tweet)
+    # add the user id (since it needs deep indexing) and tweet_group separately,
+    # then a json dump of the whole tweet
+    tweet_data += (tweet["user"]["id_str"] if "user" in tweet and "id_str" in tweet["user"] else None,
+                   tweet_group, json.dumps(tweet))
+    try:
+        con.execute(_insert_tweet_sql, tweet_data)
+        con.commit()
         return True
-    else:
+    except sqlite3.IntegrityError:
         return False
 
 
-def insert_user(db_dict, user, user_group, id_key=None):
-    """ inserts the user data (as a json object) into the database, adding "user_group"
-        key/value pair. Returns True if the insertion was successful
-
-        id_key is used to enforce uniqueness. If it is given, all tweets in the
-        database are checked on that key (e.g. "id_str"), and the tweet will only
-        be inserted if it matches
+def get_tweets(con, group=None):
+    """ returns a dict of all the tweets, filtering for the tweet_group if given
     """
-    # add the user group
-    user["user_group"] = user_group
-    db_dict["users"].append(user)
-
-    if id_key is None or _check_unique(db_dict["users"], id_key, user[id_key]):
-        db_dict["users"].append(user)
-        return True
+    if group is None:
+        cursor = con.execute(_get_all_tweets_sql)
     else:
-        return False
+        cursor = con.execute(_get_group_tweets_sql, group)
+    tweets = cursor.fetchall()
+
+    return [dict((cursor.description[i][0], value) for i, value in enumerate(row))
+            for row in tweets], tweets_header(con)
 
 
-def update_sentiments(db_dict, sent_func, update_all=True):
-    """ updates all the sentiments in the database. The calculation is performed
-        by the sentFunc, which takes the tweet string and returns a sentiment tag
-
-        if update_all is True, then all sentiments are calculated,
-        otherwise only tweets with blank sentiment strings are calculated
+def get_users(con, group=None):
+    """ returns a dict of all the users, filtering for the tweet_group if given
     """
-    # the shelve dictionary lists are immutable
-    tweets = db_dict["tweets"]
-    for tweet in tweets:
-        if update_all or len(tweet["text"]) == 0:
-            tweet["sentiment"] = sent_func(tweet["text"])
-    db_dict["tweets"] = tweets
+    if group is None:
+        cursor = con.execute(_get_all_users_sql)
+    else:
+        cursor = con.execute(_get_group_users_sql, group)
+    users = cursor.fetchall()
+
+    return [dict((cursor.description[i][0], value) for i, value in enumerate(row))
+            for row in users], user_header(con)
 
 
-def get_tweets(db_dict):
-    """ returns a dict of all the tweets
+def get_tweet_groups(con):
+    """ returns a list of all the search_groups
     """
-    return db_dict["tweets"]
+    cursor = con.execute(_get_all_tweet_groups_sql)
+    groups = cursor.fetchall()
+    return [g[0] for g in groups]
 
 
-def get_users(db_dict):
-    """ returns a dict of all the users
+def get_user_groups(con):
+    """ returns a list of all the search_groups
     """
-    return db_dict["users"]
-
-
-def get_tweet_groups(db_dict):
-    """ returns a list of all the tweet groups
-    """
-    return list(set([tweet["tweet_group"] for tweet in db_dict["tweets"]]))
-
-
+    cursor = con.execute(_get_all_user_groups_sql)
+    groups = cursor.fetchall()
+    return [g[0] for g in groups]
