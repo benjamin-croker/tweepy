@@ -12,12 +12,11 @@ import json
 _create_tables_sql = ["""
 CREATE TABLE tweets (
     id_str TEXT,
-    user_id_str TEXT,
     tweet_text TEXT,
     created_at TEXT,
     favourite_count INTEGER,
     retweet_count INTEGER,
-    user_id_str TEXT
+    user_id_str TEXT,
     tweet_group TEXT,
     PRIMARY KEY (id_str, tweet_group)
 );
@@ -37,14 +36,14 @@ CREATE TABLE users (
 );
 """]
 
-# 9 fields
+# 7 fields
 _insert_tweet_sql = """
-INSERT INTO tweets VALUES (?,?,?,?,?,?,?,?,?);
+INSERT INTO tweets VALUES (?,?,?,?,?,?,?);
 """
 
-# 10 fields
+# 9 fields
 _insert_user_sql = """
-INSERT INTO tweets VALUES (?,?,?,?,?,?,?,?,?,?);
+INSERT INTO tweets VALUES (?,?,?,?,?,?,?,?,?);
 """
 
 _get_all_tweets_sql = """

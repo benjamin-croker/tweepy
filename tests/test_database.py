@@ -6,23 +6,28 @@ class TestDatabaseInit(unittest.TestCase):
 
     def setup(self):
         db.reset("test.db", lambda x: "yes")
-        self.db_dict = db.open_db_connection("test.db")
+        self.con = db.open_db_connection("test.db")
 
     def test_reset(self):
-        """ check that the database has the correct keys after initialisation,
-            and that there is nothing there
+        """ check that the database has the correct tables after initialisation,
+            and that they are empty
         """
         self.setup()
 
-        # test the db has the right keys. The set of keys should be equal to the one below
-        keys = {"tweets", "users", "graphs", "filename"}
-        self.assertTrue(keys.issubset(set(self.db_dict.keys())))
-        self.assertTrue(keys.issuperset(set(self.db_dict.keys())))
+        # test that the tables are created correctly
+        tweets, tweets_header = db.get_tweets(self.con)
+        users, users_header = db.get_users(self.con)
+
+        self.assertEqual(tweets_header,
+                         ["id_str", "tweet_text", "created_at", "favourite_count",
+                         "retweet_count", "user_id_str", "tweet_group"])
+        self.assertEqual(users_header,
+                         ["id_str", "name", "screen_name", "created_at", "description",
+                          "followers_count", "friends_count", "statuses_count", "user_group"])
 
         # test the database is empty
-        for key in self.db_dict:
-            if key != "filename":
-                self.assertEqual(len(self.db_dict[key]), 0)
+        self.assertEqual(len(tweets), 0)
+        self.assertEqual(len(users), 0)
 
 
 class TestDatabaseInsert(unittest.TestCase):
