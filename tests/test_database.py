@@ -34,26 +34,26 @@ class TestDatabaseInsert(unittest.TestCase):
 
     def setup(self):
         db.reset("test.db", lambda x: "yes")
-        self.db_dict = db.open_db_connection("test.db")
+        self.con = db.open_db_connection("test.db")
 
-        self.example_tweets = [{"id_str": "tweet_id_101",
-                                      "user": {"id_str": "usr_id_111"},
-                                      "text": "I'm a tweet!",
-                                      "created_at": "Mon Sep 24 03:35:21 +0000 2012"},
-                               {"id_str": "tweet_id_101",
-                                      "user": {"id_str": "usr_id_111"},
-                                      "text": "I'm a tweet!",
-                                      "created_at": "Mon Sep 24 03:35:21 +0000 2012"},
-                               {"id_str": "tweet_id_101",
-                                      "user": {"id_str": "usr_id_111"},
-                                      "text": "I'm a tweet!",
-                                      "created_at": "Mon Sep 24 03:35:21 +0000 2012"}]
+        self.example_tweets = [{"id_str": u"tweet_id_101",
+                                      "user": {"id_str": u"usr_id_111"},
+                                      "text": u"I'm a tweet!",
+                                      "created_at": u"Mon Sep 24 03:35:21 +0000 2012"},
+                               {"id_str": u"tweet_id_101",
+                                      "user": {"id_str": u"usr_id_111"},
+                                      "text": u"I'm a tweet!",
+                                      "created_at": u"Mon Sep 24 03:35:21 +0000 2012"},
+                               {"id_str": u"tweet_id_101",
+                                      "user": {"id_str": u"usr_id_111"},
+                                      "text": u"I'm a tweet!",
+                                      "created_at": u"Mon Sep 24 03:35:21 +0000 2012"}]
 
     def test_no_tweets(self):
         """ tests that there are no tweets immediately after initialisation
         """
         self.setup()
-        tweets = db.get_tweets(self.db_dict)
+        tweets, _ = db.get_tweets(self.con)
         self.assertEqual(len(tweets), 0)
 
     def test_tweet_insert(self):
@@ -62,12 +62,14 @@ class TestDatabaseInsert(unittest.TestCase):
         self.setup()
 
         # test with no sentiment
-        self.assertTrue(db.insert_tweet(self.db_dict, self.example_tweets[0], "group_1"))
+        self.assertTrue(db.insert_tweet(self.con, self.example_tweets[0], "group_1"))
 
         # read back the tweet, and check it is the same as what was inserted
         # the sentiment and tweet group need to be added
-        check_tweet = dict(self.example_tweets[0].items() + {"tweet_group": "group_1", "sentiment": ""}.items())
-        tweets = db.get_tweets(self.db_dict)
+        check_tweet = {"id_str": u"tweet_id_101", "user_id_str": u"usr_id_111",
+                       "tweet_text": u"I'm a tweet!","created_at": u"Mon Sep 24 03:35:21 +0000 2012",
+                       "tweet_group": u"group_1", "retweet_count": None, "favourite_count": None}
+        tweets, _ = db.get_tweets(self.con)
         self.assertEqual(check_tweet, tweets[0])
 
     def test_persistence(self):
@@ -77,11 +79,13 @@ class TestDatabaseInsert(unittest.TestCase):
         self.test_tweet_insert()
 
         # close then open
-        db.close_db_connection(self.db_dict)
-        self.db_dict = db.open_db_connection("test.db")
+        db.close_db_connection(self.con)
+        self.con = db.open_db_connection("test.db")
 
-        check_tweet = dict(self.example_tweets[0].items() + {"tweet_group": "group_1", "sentiment": ""}.items())
-        tweets = db.get_tweets(self.db_dict)
+        check_tweet = {"id_str": u"tweet_id_101", "user_id_str": u"usr_id_111",
+                       "tweet_text": u"I'm a tweet!","created_at": u"Mon Sep 24 03:35:21 +0000 2012",
+                       "tweet_group": u"group_1", "retweet_count": None, "favourite_count": None}
+        tweets, _ = db.get_tweets(self.con)
         self.assertEqual(check_tweet, tweets[0])
 
     def test_multiple_insert(self):

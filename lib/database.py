@@ -141,12 +141,13 @@ def insert_tweet(con, tweet, tweet_group):
     """
     # get the fields out of the JSON object, inserting None, if the key doesn't exist
     index_names = ["id_str", "text", "created_at", "favourite_count", "retweet_count"]
-    tweet_data = (tweet[i] if i in tweet else None for i in index_names)
+    tweet_data = [tweet[i] if i in tweet else None for i in index_names]
+    print(tweet_data)
 
     # add the user id (since it needs deep indexing) and tweet_group separately,
     # then a json dump of the whole tweet
-    tweet_data += (tweet["user"]["id_str"] if "user" in tweet and "id_str" in tweet["user"] else None,
-                   tweet_group, json.dumps(tweet))
+    tweet_data += [tweet["user"]["id_str"] if "user" in tweet and "id_str" in tweet["user"] else None,
+                   tweet_group]
     try:
         con.execute(_insert_tweet_sql, tweet_data)
         con.commit()
