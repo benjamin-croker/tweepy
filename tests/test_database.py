@@ -93,42 +93,37 @@ class TestDatabaseInsert(unittest.TestCase):
         """
         self.setup()
 
-        self.assertTrue(db.insert_tweet(self.db_dict, self.example_tweets[0], "group_1"))
-        self.assertTrue(db.insert_tweet(self.db_dict, self.example_tweets[0], "group_2"))
-        self.assertTrue(db.insert_tweet(self.db_dict, self.example_tweets[0], "group_2", "neg"))
+        self.assertTrue(db.insert_tweet(self.con, self.example_tweets[0], "group_1"))
+        self.assertTrue(db.insert_tweet(self.con, self.example_tweets[1], "group_2"))
 
-        tweets = db.get_tweets(self.db_dict)
-        self.assertEqual(tweets[2]["sentiment"], "neg")
+        tweets, _ = db.get_tweets(self.con)
+        self.assertEqual(len(tweets), 2)
 
     def test_uniqueness(self):
         """ check that integrity constraints are enforced
         """
         self.setup()
 
-        # check without enforcing
-        self.assertTrue(db.insert_tweet(self.db_dict, self.example_tweets[0], "group"))
-        self.assertTrue(db.insert_tweet(self.db_dict, self.example_tweets[0], "group"))
-
-        # enforce uniqueness
-        self.assertFalse(db.insert_tweet(self.db_dict, self.example_tweets[0], "group",
-                                         id_key="id_str"))
+        # this one should not be inserted, since it's a duplicate of the previous one
+        self.assertTrue(db.insert_tweet(self.con, self.example_tweets[1], "group"))
+        self.assertFalse(db.insert_tweet(self.con, self.example_tweets[1], "group"))
 
 
 class TestTweetGroups(unittest.TestCase):
 
     def setup(self):
         db.reset("test.db", lambda x: "yes")
-        self.db_dict = db.open_db_connection("test.db")
+        self.con = db.open_db_connection("test.db")
 
     def test_no_groups(self):
         self.setup()
         # there should be no search groups
-        self.assertEqual(len(db.get_tweet_groups(self.db_dict)), 0)
+        self.assertEqual(len(db.get_tweet_groups(self.con)), 0)
 
     def test_multiple_groups(self):
         self.setup()
         self.assertTrue(
-            db.insert_tweet(self.db_dict, {"id_str": "tweet_id_101",
+            db.insert_tweet(self.con, {"id_str": "tweet_id_101",
                                       "user": {"id_str": "usr_id_111"},
                                       "text": "I'm a tweet!",
                                       "created_at": "Mon Sep 24 03:35:21 +0000 2012"},
@@ -136,7 +131,7 @@ class TestTweetGroups(unittest.TestCase):
         )
 
         self.assertTrue(
-            db.insert_tweet(self.db_dict, {"id_str": "tweet_id_101",
+            db.insert_tweet(self.con, {"id_str": "tweet_id_101",
                                       "user": {"id_str": "usr_id_111"},
                                       "text": "I'm a tweet!",
                                       "created_at": "Mon Sep 24 03:35:21 +0000 2012"},
@@ -144,7 +139,7 @@ class TestTweetGroups(unittest.TestCase):
         )
 
         # now there should be 2
-        tweet_groups = db.get_tweet_groups(self.db_dict)
+        tweet_groups = db.get_tweet_groups(self.con)
 
         self.assertEqual(len(tweet_groups), 2)
         self.assertTrue("tweet_group_1" in tweet_groups)
