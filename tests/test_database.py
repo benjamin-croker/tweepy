@@ -41,10 +41,6 @@ class TestDatabaseInsert(unittest.TestCase):
                                {"id_str": "tweet_id_101",
                                 "user": {"id_str": "usr_id_111"},
                                 "text": "I'm a tweet!",
-                                "created_at": "Mon Sep 24 03:35:21 +0000 2012"},
-                               {"id_str": "tweet_id_101",
-                                "user": {"id_str": "usr_id_111"},
-                                "text": "I'm a tweet!",
                                 "created_at": "Mon Sep 24 03:35:21 +0000 2012"}]
 
         self.example_users = [{"statuses_count": 3080,
@@ -105,8 +101,6 @@ class TestDatabaseInsert(unittest.TestCase):
                       "user_group": "group_1"}
 
         users, _ = db.get_users(self.con)
-        print check_user.keys()
-        print users[0].keys()
         self.assertEqual(check_user, users[0])
 
     def test_persistence(self):
@@ -126,24 +120,32 @@ class TestDatabaseInsert(unittest.TestCase):
         self.assertEqual(check_tweet, tweets[0])
 
     def test_multiple_insert(self):
-        """ test that multiple tweets can be added, including ones with sentiment
+        """ test that multiple tweets and users can be added
         """
         self.setup()
 
         self.assertTrue(db.insert_tweet(self.con, self.example_tweets[0], "group_1"))
         self.assertTrue(db.insert_tweet(self.con, self.example_tweets[1], "group_2"))
-
         tweets, _ = db.get_tweets(self.con)
         self.assertEqual(len(tweets), 2)
+
+        self.assertTrue(db.insert_user(self.con, self.example_users[0], "group_1"))
+        self.assertTrue(db.insert_user(self.con, self.example_users[1], "group_2"))
+        users, _ = db.get_users(self.con)
+        self.assertEqual(len(users), 2)
 
     def test_uniqueness(self):
         """ check that integrity constraints are enforced
         """
         self.setup()
 
-        # this one should not be inserted, since it's a duplicate of the previous one
         self.assertTrue(db.insert_tweet(self.con, self.example_tweets[1], "group"))
+        # this one should not be inserted, since it's a duplicate of the previous one
         self.assertFalse(db.insert_tweet(self.con, self.example_tweets[1], "group"))
+
+        self.assertTrue(db.insert_user(self.con, self.example_users[1], "group"))
+        # this one should not be inserted, since it's a duplicate of the previous one
+        self.assertFalse(db.insert_user(self.con, self.example_users[1], "group"))
 
 
 class TestTweetGroups(unittest.TestCase):
@@ -151,35 +153,65 @@ class TestTweetGroups(unittest.TestCase):
         db.reset("test.db", lambda x: "yes")
         self.con = db.open_db_connection("test.db")
 
+        self.example_tweets = [{"id_str": "tweet_id_101",
+                                "user": {"id_str": "usr_id_111"},
+                                "text": "I'm a tweet!",
+                                "created_at": "Mon Sep 24 03:35:21 +0000 2012"},
+                               {"id_str": "tweet_id_102",
+                                "user": {"id_str": "usr_id_111"},
+                                "text": "I'm a tweet!",
+                                "created_at": "Mon Sep 24 03:35:21 +0000 2012"}]
+
+        self.example_users = [{"statuses_count": 3080,
+                               "favourites_count": 22,
+                               "name": "Twitter API",
+                               "description": """The Real Twitter API. I tweet about API changes,
+                                               service issues and happily answer questions about Twitter
+                                               and our API. Don't get an answer? It's on my website.""",
+                               "followers_count": 665829,
+                               "screen_name": "twitterapi",
+                               "friends_count": 32,
+                               "id_str": "6253282",
+                               "created_at": "Wed May 23 06:01:13 +0000 2007"},
+                              {"statuses_count": 3080,
+                               "favourites_count": 22,
+                               "name": "Different Twitter API",
+                               "description": """I'm not the same!""",
+                               "followers_count": 665829,
+                               "screen_name": "twitterapi",
+                               "friends_count": 32,
+                               "id_str": "6253281",
+                               "created_at": "Wed May 23 06:01:13 +0000 2007"}]
+
     def test_no_groups(self):
         self.setup()
         # there should be no search groups
         self.assertEqual(len(db.get_tweet_groups(self.con)), 0)
+        self.assertEqual(len(db.get_user_groups(self.con)), 0)
 
     def test_multiple_groups(self):
         self.setup()
-        self.assertTrue(
-            db.insert_tweet(self.con, {"id_str": "tweet_id_101",
-                                       "user": {"id_str": "usr_id_111"},
-                                       "text": "I'm a tweet!",
-                                       "created_at": "Mon Sep 24 03:35:21 +0000 2012"},
-                            "tweet_group_1")
-        )
 
-        self.assertTrue(
-            db.insert_tweet(self.con, {"id_str": "tweet_id_101",
-                                       "user": {"id_str": "usr_id_111"},
-                                       "text": "I'm a tweet!",
-                                       "created_at": "Mon Sep 24 03:35:21 +0000 2012"},
-                            "tweet_group_2")
-        )
+        self.assertTrue(db.insert_tweet(self.con, self.example_tweets[0], "tweet_group_1"))
+        self.assertTrue(db.insert_tweet(self.con, self.example_tweets[0], "tweet_group_2"))
+        self.assertTrue(db.insert_tweet(self.con, self.example_tweets[1], "tweet_group_2"))
 
-        # now there should be 2
+        # there should be 2 groups
         tweet_groups = db.get_tweet_groups(self.con)
-
         self.assertEqual(len(tweet_groups), 2)
         self.assertTrue("tweet_group_1" in tweet_groups)
         self.assertTrue("tweet_group_2" in tweet_groups)
+
+        # do the same for the users
+        self.assertTrue(db.insert_user(self.con, self.example_users[0], "user_group_1"))
+        self.assertTrue(db.insert_user(self.con, self.example_users[0], "user_group_2"))
+        self.assertTrue(db.insert_user(self.con, self.example_users[1], "user_group_2"))
+
+        # there should be 2 groups
+        user_groups = db.get_user_groups(self.con)
+        self.assertEqual(len(user_groups), 2)
+        self.assertTrue("user_group_1" in user_groups)
+        self.assertTrue("user_group_2" in user_groups)
 
 
 if __name__ == "__main__":

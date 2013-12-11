@@ -69,7 +69,7 @@ SELECT tweet_group FROM tweets GROUP BY tweet_group;
 """
 
 _get_all_user_groups_sql = """
-SELECT user_group FROM tweets GROUP BY user_group;
+SELECT user_group FROM users GROUP BY user_group;
 """
 
 
