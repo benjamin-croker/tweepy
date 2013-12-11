@@ -43,7 +43,7 @@ INSERT INTO tweets VALUES (?,?,?,?,?,?,?);
 
 # 9 fields
 _insert_user_sql = """
-INSERT INTO tweets VALUES (?,?,?,?,?,?,?,?,?);
+INSERT INTO users VALUES (?,?,?,?,?,?,?,?,?);
 """
 
 _get_all_tweets_sql = """
@@ -142,14 +142,34 @@ def insert_tweet(con, tweet, tweet_group):
     # get the fields out of the JSON object, inserting None, if the key doesn't exist
     index_names = ["id_str", "text", "created_at", "favourite_count", "retweet_count"]
     tweet_data = [tweet[i] if i in tweet else None for i in index_names]
-    print(tweet_data)
 
     # add the user id (since it needs deep indexing) and tweet_group separately,
-    # then a json dump of the whole tweet
     tweet_data += [tweet["user"]["id_str"] if "user" in tweet and "id_str" in tweet["user"] else None,
                    tweet_group]
     try:
         con.execute(_insert_tweet_sql, tweet_data)
+        con.commit()
+        return True
+    except sqlite3.IntegrityError:
+        return False
+
+
+def insert_user(con, user, user_group):
+    """ Inserts the tweet data (passed as a json object) into the database, adding
+        "tweet_group" field. Returns True if the insertion was successful.
+
+        If another tweet with the same id and tweet_group is given, it will not be
+        inserted.
+    """
+    # get the fields out of the JSON object, inserting None, if the key doesn't exist
+    index_names = ["id_str", "name", "screen_name", "created_at", "description",
+                   "followers_count", "friends_count", "statuses_count"]
+    user_data = [user[i] if i in user else None for i in index_names]
+
+    # add the user_group separately,
+    user_data += [user_group]
+    try:
+        con.execute(_insert_user_sql, user_data)
         con.commit()
         return True
     except sqlite3.IntegrityError:
