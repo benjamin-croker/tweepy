@@ -8,10 +8,10 @@ import os
 import time
 
 import database as db
-from data import auth
+from data import settings
 
-oauth_token = oauth.Token(key=auth.access_token_key, secret=auth.access_token_secret)
-oauth_consumer = oauth.Consumer(key=auth.consumer_key, secret=auth.consumer_secret)
+oauth_token = oauth.Token(key=settings.access_token_key, secret=settings.access_token_secret)
+oauth_consumer = oauth.Consumer(key=settings.consumer_key, secret=settings.consumer_secret)
 
 
 # set up a handler to catch ctrl-c events

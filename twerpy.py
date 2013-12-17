@@ -21,7 +21,7 @@ if args.which == "setup" and args.database is None:
     sys.exit(0)
 
 # if we're not running a basic setup, we need to import other files
-from data import auth
+from data import settings
 from lib import database as db
 from lib import tweet_handler
 
@@ -31,7 +31,7 @@ data_dir_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 if args.database:
     db_filename = os.path.join(data_dir_path, args.database)
 else:
-    db_filename = os.path.join(data_dir_path, auth.default_db_filename)
+    db_filename = os.path.join(data_dir_path, settings.default_db_filename)
 
 
 if args.which == "setup":

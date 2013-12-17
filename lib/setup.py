@@ -108,11 +108,11 @@ def setup_all():
     if len(default_db_filename) == 0:
         default_db_filename = "tweets.db"
 
-    with open(_join_to_data_dir("auth.py"), "w") as authFile:
-        authFile.write("access_token_key = \"{0}\"\n".format(access_token_key))
-        authFile.write("access_token_secret = \"{0}\"\n".format(access_token_secret))
-        authFile.write("consumer_key = \"{0}\"\n".format(consumer_key))
-        authFile.write("consumer_secret = \"{0}\"\n".format(consumer_secret))
-        authFile.write("default_db_filename = \"{0}\"\n".format(default_db_filename))
+    with open(_join_to_data_dir("settings.py"), "w") as settings_file:
+        settings_file.write("access_token_key = \"{0}\"\n".format(access_token_key))
+        settings_file.write("access_token_secret = \"{0}\"\n".format(access_token_secret))
+        settings_file.write("consumer_key = \"{0}\"\n".format(consumer_key))
+        settings_file.write("consumer_secret = \"{0}\"\n".format(consumer_secret))
+        settings_file.write("default_db_filename = \"{0}\"\n".format(default_db_filename))
 
     db.reset(_join_to_data_dir(default_db_filename))
