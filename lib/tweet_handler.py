@@ -8,7 +8,6 @@ import os
 import time
 
 import database as db
-import analysis
 from data import auth
 
 oauth_token = oauth.Token(key=auth.access_token_key, secret=auth.access_token_secret)
@@ -341,62 +340,3 @@ def dump_users(db_dict, group=None, filename=None, report_format="csv"):
                 writer.writerow([user[k].encode("utf-8") for k in header])
         else:
             raise Exception("Format must be csv or json")
-
-
-def dump_word_frequencies(db_dict, report_format="csv", filter_stopwords=True):
-    """ writes the word frequencies to the "reports" folder.
-        Format must be one of csv or json
-    """
-    tweets = db.get_tweets(db_dict)
-    word_freqs = analysis.word_frequency(tweets, filter_stopwords=filter_stopwords)
-
-    if report_format == "json":
-        with open(os.path.join("reports", "word_freq.json"), "wb") as f:
-            f.write(json.dumps(word_freqs))
-
-    elif report_format == "csv":
-        with open(os.path.join("reports", "word_freq.csv"), "wb") as f:
-            writer = csv.writer(f, delimiter=",")
-
-            writer.writerow(["word"] + ["{0}_frequency".format(f["label"])
-                                        for f in word_freqs])
-
-            for i in range(len(word_freqs[0]["data"])):
-                row = [word_freqs[0]["data"][i][0]]
-                row += [group["data"][i][1] for group in word_freqs]
-
-                if type(row[0]) == unicode:
-                    row[0] = row[0].encode("utf-8")
-                writer.writerow(row)
-    else:
-        raise Exception("Format must be csv or json")
-
-
-def dump_sentiment_frequencies(con, report_format="csv"):
-    """ writes the sentiment frequencies to the "reports" folder.
-        Format must be one of csv or json
-    """
-    tweets = db.get_tweets(con)
-    sent_freqs = analysis.sentiment_frequency(tweets)
-
-    if report_format == "json":
-        with open(os.path.join("reports", "sent_freq.json"), "wb") as f:
-            f.write(json.dumps(sent_freqs))
-
-    elif report_format == "csv":
-        with open(os.path.join("reports", "sent_freq.csv"), "wb") as f:
-            writer = csv.writer(f, delimiter=",")
-
-            writer.writerow(["sentiment"] + ["{0}_frequency".format(f["label"])
-                                             for f in sent_freqs])
-
-            for i in range(len(sent_freqs[0]["data"])):
-                row = [sent_freqs[0]["data"][i][0]]
-                row += [group["data"][i][1] for group in sent_freqs]
-
-                if type(row[0]) == unicode:
-                    row[0] = row[0].encode("utf-8")
-                writer.writerow(row)
-    else:
-        raise Exception("Format must be csv or json")
-

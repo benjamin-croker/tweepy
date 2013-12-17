@@ -3,10 +3,8 @@ database.py:
     File for connecting to an sqlite database to store the data
 """
 import os
-import cPickle
 import sys
 import sqlite3
-import json
 
 # can't call tweet.text text, as TEXT is a keyword
 _create_tables_sql = ["""

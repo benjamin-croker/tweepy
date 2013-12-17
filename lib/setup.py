@@ -2,7 +2,6 @@ import argparse
 import logging
 import os
 
-import analysis
 import database as db
 
 
@@ -62,21 +61,6 @@ def setup_parser():
             help="Specify a group")
     search_trends_p.set_defaults(which="search-trends")
 
-    # set up arguments for the calc-sentiment command
-    calc_sentiment_p = subparsers.add_parser("calc-sentiment", parents=[common],
-            help="Calculates the sentiment for all tweets in the database")
-    calc_sentiment_p.add_argument("--force",
-            help="Recalculate the sentiment for each tweet, even if it is already calculated")
-    calc_sentiment_p.set_defaults(which="calc-sentiment")
-
-    # set up arguments for the report command
-    report_p = subparsers.add_parser("report", parents=[common],
-            help="Writes CSV (default) or JSON reports to the 'reports' directory")
-    report_p.add_argument("--json", help="Report data in JSON format")
-    report_p.add_argument("--inc_stopwords", action="store_true",
-                          help="Include stopwords in tweet analysis")
-    report_p.set_defaults(which="report")
-
     # set up arguments for the dump-tweets command
     dump_tweets_p = subparsers.add_parser("dump-tweets", parents=[common],
             help="Dumps all the tweet data to tweets.csv in the 'reports' directory, or in a location specified by the -o option")
@@ -130,10 +114,5 @@ def setup_all():
         authFile.write("consumer_key = \"{0}\"\n".format(consumer_key))
         authFile.write("consumer_secret = \"{0}\"\n".format(consumer_secret))
         authFile.write("default_db_filename = \"{0}\"\n".format(default_db_filename))
-        authFile.write("default_cl_filename = \"{0}\"\n".format("movies.cl"))
-
 
     db.reset(_join_to_data_dir(default_db_filename))
-
-    logging.info("Training sentiment classifier")
-    analysis.train_sentiment(_join_to_data_dir("movies.cl"))
