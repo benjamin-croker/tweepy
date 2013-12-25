@@ -8,10 +8,11 @@ import os
 import time
 
 import database as db
-from data import settings
+from data import user_settings
+from data import twitter_settings
 
-oauth_token = oauth.Token(key=settings.access_token_key, secret=settings.access_token_secret)
-oauth_consumer = oauth.Consumer(key=settings.consumer_key, secret=settings.consumer_secret)
+oauth_token = oauth.Token(key=user_settings.access_token_key, secret=user_settings.access_token_secret)
+oauth_consumer = oauth.Consumer(key=user_settings.consumer_key, secret=user_settings.consumer_secret)
 
 
 # set up a handler to catch ctrl-c events
@@ -56,7 +57,8 @@ def twitterreq(url, http_method="GET", parameters=()):
     return json_response
 
 
-def search_tweets(term, tweet_group, db_dict, no_RT=False, search_count=50):
+def search_tweets(term, tweet_group, db_con, no_RT=False,
+                  search_count=twitter_settings.max_search_tweets_count):
     """ searches for tweets containing the given term and stores them in the database
 
         returns the list of tweet objects
@@ -80,13 +82,14 @@ def search_tweets(term, tweet_group, db_dict, no_RT=False, search_count=50):
     # save the results
     tweets = json_data["statuses"]
     for tweet in tweets:
-        db.insert_tweet(db_dict, tweet, tweet_group)
+        db.insert_tweet(db_con, tweet, tweet_group)
 
     logging.info("Results written to database")
     return tweets
 
 
-def search_users(term, user_group, db_dict, search_count=50):
+def search_users(term, user_group, db_con,
+                 search_count=twitter_settings.max_search_tweets_count):
     """ searches for users who have recently posted tweets with containing the term and
         stores them in the database
 
@@ -114,13 +117,14 @@ def search_users(term, user_group, db_dict, search_count=50):
     users = [tweet["user"] for tweet in tweets]
 
     for user in users:
-        db.insert_user(db_dict, user, user_group)
+        db.insert_user(db_con, user, user_group)
 
     logging.info("Results written to database")
     return users
 
 
-def search_top_users(term, user_group, db_dict, search_count=20):
+def search_top_users(term, user_group, db_con,
+                     search_count=twitter_settings.max_users_search_count):
     """ Searches for the top users matching a specific term, and stores
         them in the database. Use search_users for users currently tweeting
         about a specific topic
@@ -142,7 +146,7 @@ def search_top_users(term, user_group, db_dict, search_count=20):
     users = json_data
 
     for user in users:
-        db.insert_user(db_dict, user, user_group)
+        db.insert_user(db_con, user, user_group)
         if "screen_name" in user and user["screen_name"]:
             print("{0}:{1}".format(user["screen_name"], user_group))
 
@@ -150,7 +154,8 @@ def search_top_users(term, user_group, db_dict, search_count=20):
     return users
 
 
-def search_user_tweets(screen_name, user_group, db_dict, search_count=200):
+def search_user_tweets(screen_name, user_group, db_con,
+                       search_count=twitter_settings.max_user_timeline_count):
     """ Searches for the top users matching a specific term, and stores
         them in the database. Use search_users for users currently tweeting
         about a specific topic
@@ -171,13 +176,14 @@ def search_user_tweets(screen_name, user_group, db_dict, search_count=200):
     tweets = json_data
 
     for tweet in tweets:
-        db.insert_tweet(db_dict, tweet, user_group)
+        db.insert_tweet(db_con, tweet, user_group)
 
     logging.info("Results written to database")
     return tweets
 
 
-def search_multiple_terms(filename, db_dict, no_RT=False, rate_limit=180):
+def search_multiple_terms(filename, db_con, no_RT=False,
+                          rate_limit=twitter_settings.multiple_search_limit):
     """ opens a file, which contains one search term per line,
         and runs a search for each term
 
@@ -196,7 +202,7 @@ def search_multiple_terms(filename, db_dict, no_RT=False, rate_limit=180):
             if group.endswith("\n"):
                 group = group[:-1]
 
-            search_tweets(term, group, db_dict, no_RT)
+            search_tweets(term, group, db_con, no_RT)
 
             items += 1
             if items >= rate_limit:
@@ -205,7 +211,8 @@ def search_multiple_terms(filename, db_dict, no_RT=False, rate_limit=180):
                 items = 0
 
 
-def search_multiple_users(filename, db_dict, rate_limit=180):
+def search_multiple_users(filename, db_con,
+                          rate_limit=twitter_settings.multiple_search_limit):
     """ opens a file, which contains one search term per line,
         and runs a search for each term
 
@@ -224,7 +231,7 @@ def search_multiple_users(filename, db_dict, rate_limit=180):
             if group.endswith("\n"):
                 group = group[:-1]
 
-            search_user_tweets(term, group, db_dict)
+            search_user_tweets(term, group, db_con)
 
             items += 1
             if items >= rate_limit:
@@ -233,7 +240,7 @@ def search_multiple_users(filename, db_dict, rate_limit=180):
                 items = 0
 
 
-def search_suggested_users(db_dict):
+def search_suggested_users(db_con):
     logging.info("Getting suggested users")
 
     # define the query url to get the suggestion categories
@@ -256,7 +263,7 @@ def search_suggested_users(db_dict):
         users = json_data["users"]
 
         for user in users:
-            db.insert_user(db_dict, user, slug)
+            db.insert_user(db_con, user, slug)
             if "screen_name" in user and user["screen_name"]:
                 print("{0}:{1}".format(user["screen_name"], slug))
 
@@ -284,12 +291,12 @@ def search_trends(WOEID, trend_group):
             print("{0}:{1}".format(trend["name"], trend_group))
 
 
-def dump_tweets(db_dict, group=None, filename=None, report_format="csv"):
+def dump_tweets(db_con, group=None, filename=None, report_format="csv"):
     """ writes the tweets to the reports folder.
         format must be one of csv or json
     """
     header = ["id_str", "text", "created_at", "tweet_group", "sentiment"]
-    tweets = db.get_tweets(db_dict)
+    tweets = db.get_tweets(db_con)
 
     # set a default filename in the reports directory if none is provided
     if filename is None:
@@ -313,12 +320,12 @@ def dump_tweets(db_dict, group=None, filename=None, report_format="csv"):
             raise Exception("Format must be csv or json")
 
 
-def dump_users(db_dict, group=None, filename=None, report_format="csv"):
+def dump_users(db_con, group=None, filename=None, report_format="csv"):
     """ writes the tweets to the reports folder.
         format must be one of csv or json
     """
     header = ["id_str", "screen_name", "user_group"]
-    users = db.get_users(db_dict)
+    users = db.get_users(db_con)
 
     # set a default filename in the reports directory if none is provided
     if filename is None:

@@ -5,7 +5,7 @@ import os
 import database as db
 
 
-def setup_parser():
+def gen_parser():
     parser = argparse.ArgumentParser(add_help=False)
 
     # add common arguments
@@ -91,8 +91,8 @@ def setup_db(db_filename):
 
 def setup_all():
     def _join_to_data_dir(filename):
-        # this file is  tweepy/lib/setup.py, so navigate to tweepy/
-        # the join with data/ to get tweepy/data/
+        # this file is  twerpy/lib/setup.py, so navigate to twerpy/
+        # the join with data/ to get twerpy/data/
         return os.path.join(
                 os.path.dirname(os.path.dirname(
                         os.path.abspath(__file__))),
@@ -108,7 +108,7 @@ def setup_all():
     if len(default_db_filename) == 0:
         default_db_filename = "tweets.db"
 
-    with open(_join_to_data_dir("settings.py"), "w") as settings_file:
+    with open(_join_to_data_dir("user_settings.py"), "w") as settings_file:
         settings_file.write("access_token_key = \"{0}\"\n".format(access_token_key))
         settings_file.write("access_token_secret = \"{0}\"\n".format(access_token_secret))
         settings_file.write("consumer_key = \"{0}\"\n".format(consumer_key))

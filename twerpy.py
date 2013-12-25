@@ -5,7 +5,7 @@ import sys
 from lib import setup
 
 # set up the arguments
-args = setup.setup_parser().parse_args()
+args = setup.gen_parser().parse_args()
 
 # set up logging
 if args.debug:
@@ -21,7 +21,7 @@ if args.which == "setup" and args.database is None:
     sys.exit(0)
 
 # if we're not running a basic setup, we need to import other files
-from data import settings
+from data import user_settings
 from lib import database as db
 from lib import tweet_handler
 
@@ -31,16 +31,16 @@ data_dir_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 if args.database:
     db_filename = os.path.join(data_dir_path, args.database)
 else:
-    db_filename = os.path.join(data_dir_path, settings.default_db_filename)
+    db_filename = os.path.join(data_dir_path, user_settings.default_db_filename)
 
 
 if args.which == "setup":
     setup.setup_db(db_filename)
 
 elif args.which == "search-tweets":
-    db_dict = db.open_db_connection(db_filename)
-    tweet_handler.search_multiple_terms(args.filename, db_dict, args.no_RT)
-    db.close_db_connection(db_dict)
+    db_con = db.open_db_connection(db_filename)
+    tweet_handler.search_multiple_terms(args.filename, db_con, args.no_RT)
+    db.close_db_connection(db_con)
 
 elif args.which == "search-trends":
     if args.group:
@@ -50,22 +50,22 @@ elif args.which == "search-trends":
     tweet_handler.search_trends(args.WOEID, group)
 
 elif args.which == "search-top-users":
-    db_dict = db.open_db_connection(db_filename)
+    db_con = db.open_db_connection(db_filename)
     if args.group:
         group = args.group
     else:
         group = args.term
-    tweet_handler.search_top_users(args.term, group, db_dict)
-    db.close_db_connection(db_dict)
+    tweet_handler.search_top_users(args.term, group, db_con)
+    db.close_db_connection(db_con)
 
 elif args.which == "search-user-tweets":
-    db_dict = db.open_db_connection(db_filename)
-    tweet_handler.search_multiple_users(args.filename, db_dict)
-    db.close_db_connection(db_dict)
+    db_con = db.open_db_connection(db_filename)
+    tweet_handler.search_multiple_users(args.filename, db_con)
+    db.close_db_connection(db_con)
 
 elif args.which == "search-suggested-users":
-    db_dict = db.open_db_connection(db_filename)
-    tweet_handler.search_suggested_users(db_dict)
+    db_con = db.open_db_connection(db_filename)
+    tweet_handler.search_suggested_users(db_con)
 
 elif args.which == "dump-tweets":
     if args.json:
@@ -73,9 +73,9 @@ elif args.which == "dump-tweets":
     else:
         report_format = "csv"
 
-    db_dict = db.open_db_connection(db_filename)
-    tweet_handler.dump_tweets(db_dict, args.group, args.output, report_format)
-    db.close_db_connection(db_dict)
+    db_con = db.open_db_connection(db_filename)
+    tweet_handler.dump_tweets(db_con, args.group, args.output, report_format)
+    db.close_db_connection(db_con)
 
 elif args.which == "dump-users":
     if args.json:
@@ -83,6 +83,6 @@ elif args.which == "dump-users":
     else:
         report_format = "csv"
 
-    db_dict = db.open_db_connection(db_filename)
-    tweet_handler.dump_users(db_dict, args.group, args.output, report_format)
-    db.close_db_connection(db_dict)
+    db_con = db.open_db_connection(db_filename)
+    tweet_handler.dump_users(db_con, args.group, args.output, report_format)
+    db.close_db_connection(db_con)

@@ -78,17 +78,17 @@ def _warning_prompt(db_filename):
     return raw_input("Type 'yes' to proceed, or anything else to quit: ")
 
 
-def tweets_header(con):
+def tweets_header(db_con):
     """ returns a list of the headers in the tweets table
     """
-    cursor = con.execute(_get_all_tweets_sql)
+    cursor = db_con.execute(_get_all_tweets_sql)
     return [c[0] for c in cursor.description]
 
 
-def user_header(con):
+def user_header(db_con):
     """ returns a list of the headers in the user table
     """
-    cursor = con.execute(_get_all_users_sql)
+    cursor = db_con.execute(_get_all_users_sql)
     return [c[0] for c in cursor.description]
 
 
@@ -110,11 +110,11 @@ def reset(db_filename, warning_input=_warning_prompt):
         pass
 
      # create the database tables
-    con = open_db_connection(db_filename)
+    db_con = open_db_connection(db_filename)
     for _create_table_sql in _create_tables_sql:
-        con.execute(_create_table_sql)
-    con.commit()
-    con.close()
+        db_con.execute(_create_table_sql)
+    db_con.commit()
+    db_con.close()
 
 
 def open_db_connection(db_filename):
@@ -123,14 +123,14 @@ def open_db_connection(db_filename):
     return sqlite3.connect(db_filename)
 
 
-def close_db_connection(con):
+def close_db_connection(db_con):
     """ will commit changes as well
     """
-    con.commit()
-    con.close()
+    db_con.commit()
+    db_con.close()
 
 
-def insert_tweet(con, tweet, tweet_group):
+def insert_tweet(db_con, tweet, tweet_group):
     """ Inserts the tweet data (passed as a json object) into the database, adding
         "tweet_group" field. Returns True if the insertion was successful.
 
@@ -145,14 +145,14 @@ def insert_tweet(con, tweet, tweet_group):
     tweet_data += [tweet["user"]["id_str"] if "user" in tweet and "id_str" in tweet["user"] else None,
                    tweet_group]
     try:
-        con.execute(_insert_tweet_sql, tweet_data)
-        con.commit()
+        db_con.execute(_insert_tweet_sql, tweet_data)
+        db_con.commit()
         return True
     except sqlite3.IntegrityError:
         return False
 
 
-def insert_user(con, user, user_group):
+def insert_user(db_con, user, user_group):
     """ Inserts the tweet data (passed as a json object) into the database, adding
         "tweet_group" field. Returns True if the insertion was successful.
 
@@ -167,50 +167,50 @@ def insert_user(con, user, user_group):
     # add the user_group separately,
     user_data += [user_group]
     try:
-        con.execute(_insert_user_sql, user_data)
-        con.commit()
+        db_con.execute(_insert_user_sql, user_data)
+        db_con.commit()
         return True
     except sqlite3.IntegrityError:
         return False
 
 
-def get_tweets(con, group=None):
+def get_tweets(db_con, group=None):
     """ returns a dict of all the tweets, filtering for the tweet_group if given
     """
     if group is None:
-        cursor = con.execute(_get_all_tweets_sql)
+        cursor = db_con.execute(_get_all_tweets_sql)
     else:
-        cursor = con.execute(_get_group_tweets_sql, group)
+        cursor = db_con.execute(_get_group_tweets_sql, group)
     tweets = cursor.fetchall()
 
     return [dict((cursor.description[i][0], value) for i, value in enumerate(row))
-            for row in tweets], tweets_header(con)
+            for row in tweets], tweets_header(db_con)
 
 
-def get_users(con, group=None):
+def get_users(db_con, group=None):
     """ returns a dict of all the users, filtering for the tweet_group if given
     """
     if group is None:
-        cursor = con.execute(_get_all_users_sql)
+        cursor = db_con.execute(_get_all_users_sql)
     else:
-        cursor = con.execute(_get_group_users_sql, group)
+        cursor = db_con.execute(_get_group_users_sql, group)
     users = cursor.fetchall()
 
     return [dict((cursor.description[i][0], value) for i, value in enumerate(row))
-            for row in users], user_header(con)
+            for row in users], user_header(db_con)
 
 
-def get_tweet_groups(con):
+def get_tweet_groups(db_con):
     """ returns a list of all the search_groups
     """
-    cursor = con.execute(_get_all_tweet_groups_sql)
+    cursor = db_con.execute(_get_all_tweet_groups_sql)
     groups = cursor.fetchall()
     return [g[0] for g in groups]
 
 
-def get_user_groups(con):
+def get_user_groups(db_con):
     """ returns a list of all the search_groups
     """
-    cursor = con.execute(_get_all_user_groups_sql)
+    cursor = db_con.execute(_get_all_user_groups_sql)
     groups = cursor.fetchall()
     return [g[0] for g in groups]
