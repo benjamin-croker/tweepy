@@ -192,7 +192,7 @@ def search_multiple_terms(filename, db_con, no_RT=False,
     """
     with open(filename) as f:
         # number of terms we've searched for
-        items = 0
+        n_requests = 0
         for line in f.readlines():
             # split the line into a query and group
             # check the line to see if it's formatted correctly
@@ -204,11 +204,11 @@ def search_multiple_terms(filename, db_con, no_RT=False,
 
             search_tweets(term, group, db_con, no_RT)
 
-            items += 1
-            if items >= rate_limit:
+            n_requests += 1
+            if n_requests >= rate_limit:
                 logging.info("Sleeping for 15 mins to avoid rate limiting")
                 time.sleep(900)
-                items = 0
+                n_requests = 0
 
 
 def search_multiple_users(filename, db_con,
@@ -221,7 +221,7 @@ def search_multiple_users(filename, db_con,
     """
     with open(filename) as f:
         # number of users we've searched for
-        items = 0
+        n_requests = 0
         for line in f.readlines():
             # split the line into a query and group
             # check the line to see if it's formatted correctly
@@ -232,15 +232,15 @@ def search_multiple_users(filename, db_con,
                 group = group[:-1]
 
             search_user_tweets(term, group, db_con)
+            n_requests += 1
 
-            items += 1
-            if items >= rate_limit:
+            if n_requests >= rate_limit:
                 logging.info("Sleeping for 15 mins to avoid rate limiting")
                 time.sleep(900)
-                items = 0
+                n_requests = 0
 
 
-def search_suggested_users(db_con):
+def search_suggested_users(db_con, rate_limit=twitter_settings.multiple_user_sugg_limit):
     logging.info("Getting suggested users")
 
     # define the query url to get the suggestion categories
@@ -252,6 +252,7 @@ def search_suggested_users(db_con):
     slugs = [d["slug"] for d in json_data]
 
     # get the users for each slug
+    n_requests = 0
     for slug in slugs:
         # define the query url to get the users
         query_url = "https://api.twitter.com/1.1/users/suggestions/{0}.json".format(slug)
@@ -266,6 +267,12 @@ def search_suggested_users(db_con):
             db.insert_user(db_con, user, slug)
             if "screen_name" in user and user["screen_name"]:
                 print("{0}:{1}".format(user["screen_name"], slug))
+
+        n_requests += 1
+        if n_requests >= rate_limit:
+                logging.info("Sleeping for 15 mins to avoid rate limiting")
+                time.sleep(900)
+                n_requests = 0
 
     logging.info("Results written to database")
     return slugs
