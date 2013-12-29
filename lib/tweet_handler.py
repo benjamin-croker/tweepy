@@ -205,7 +205,6 @@ def search_home_timeline(tweet_group, db_con,
     return tweets
 
 
-
 def search_multiple_terms(filename, db_con, no_RT=False,
                           rate_limit=twitter_settings.multiple_search_limit):
     """ opens a file, which contains one search term per line,
@@ -326,16 +325,11 @@ def dump_tweets(db_con, group=None, filename=None, report_format="csv"):
     """ writes the tweets to the reports folder.
         format must be one of csv or json
     """
-    header = ["id_str", "text", "created_at", "tweet_group", "sentiment"]
-    tweets = db.get_tweets(db_con)
+    tweets, header = db.get_tweets(db_con, group)
 
     # set a default filename in the reports directory if none is provided
     if filename is None:
         filename = os.path.join("reports", "tweets.{0}".format(report_format))
-
-    # filter the tweets for a specific group if it is given
-    if group is not None:
-        tweets = [tweet for tweet in tweets if tweet["tweet_group"] == group]
 
     with open(filename, "wb") as f:
         if report_format == "json":
@@ -355,16 +349,11 @@ def dump_users(db_con, group=None, filename=None, report_format="csv"):
     """ writes the tweets to the reports folder.
         format must be one of csv or json
     """
-    header = ["id_str", "screen_name", "user_group"]
-    users = db.get_users(db_con)
+    users, header = db.get_users(db_con, group)
 
     # set a default filename in the reports directory if none is provided
     if filename is None:
         filename = os.path.join("reports", "tweets.{0}".format(report_format))
-
-    # filter the tweets for a specific group if it is given
-    if group is not None:
-        users = [user for user in users if user["user_group"] == group]
 
     with open(filename, "wb") as f:
         if report_format == "json":

@@ -35,11 +35,11 @@ def gen_parser():
     search_users_p.set_defaults(which="search-users")
 
     # set up arguments for the get-home-timeline command
-    get_home_timeline_p = subparsers.add_parser("get-home-timeline", parents=[common],
+    search_home_timeline_p = subparsers.add_parser("get-home-timeline", parents=[common],
             help="Get tweets from your home timeline")
-    get_home_timeline_p.add_argument("-g", "--group",
+    search_home_timeline_p.add_argument("-g", "--group",
             help="Specify a group")
-    get_home_timeline_p.set_defaults(which="get-home-timeline")
+    search_home_timeline_p.set_defaults(which="get-home-timeline")
 
     # set up arguments for the search-top-users command
     search_top_user_p = subparsers.add_parser("search-top-users", parents=[common],

@@ -42,7 +42,7 @@ elif args.which == "search-tweets":
     tweet_handler.search_multiple_terms(args.filename, db_con, args.no_RT)
     db.close_db_connection(db_con)
 
-elif args.which == "get-home-timeline":
+elif args.which == "search-home-timeline":
     if args.group:
         group = args.group
     else:
