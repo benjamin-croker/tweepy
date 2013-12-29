@@ -154,7 +154,7 @@ def search_top_users(term, user_group, db_con,
     return users
 
 
-def search_user_tweets(screen_name, user_group, db_con,
+def search_user_tweets(screen_name, tweet_group, db_con,
                        search_count=twitter_settings.max_user_timeline_count):
     """ Searches for the top users matching a specific term, and stores
         them in the database. Use search_users for users currently tweeting
@@ -176,10 +176,34 @@ def search_user_tweets(screen_name, user_group, db_con,
     tweets = json_data
 
     for tweet in tweets:
-        db.insert_tweet(db_con, tweet, user_group)
+        db.insert_tweet(db_con, tweet, tweet_group)
 
     logging.info("Results written to database")
     return tweets
+
+
+def search_home_timeline(tweet_group, db_con,
+                         search_count=twitter_settings.max_home_timeline_count):
+    """ Gets all the tweets posted by the authenticating user
+    """
+    query_params = "?count={1}".format(search_count)
+    logging.info("Searching for your home timeline")
+
+    # encode the query for use in a url
+    query_url = "https://api.twitter.com/1.1/statuses/home_timeline.json{0}".format(query_params)
+
+    logging.debug("Twitter API call: {0}".format(query_url))
+    json_data = twitterreq(query_url, "GET")
+
+    # save the results
+    tweets = json_data
+
+    for tweet in tweets:
+        db.insert_tweet(db_con, tweet, tweet_group)
+
+    logging.info("Results written to database")
+    return tweets
+
 
 
 def search_multiple_terms(filename, db_con, no_RT=False,

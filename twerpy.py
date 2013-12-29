@@ -42,6 +42,14 @@ elif args.which == "search-tweets":
     tweet_handler.search_multiple_terms(args.filename, db_con, args.no_RT)
     db.close_db_connection(db_con)
 
+elif args.which == "get-home-timeline":
+    if args.group:
+        group = args.group
+    else:
+        group = "home_timeline"
+    db_con = db.open_db_connection(db_filename)
+    tweet_handler.search_home_timeline(group, db_con)
+
 elif args.which == "search-trends":
     if args.group:
         group = args.group
